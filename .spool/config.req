@@ -22,6 +22,7 @@ requirements:
     acceptance_criteria:
 
       - id: CONFIG-1-1
+        title: Valid Config Parsing
         description: >
           Given a .spool.yaml file at the project root,
           when config is loaded,
@@ -29,6 +30,7 @@ requirements:
           struct is returned.
 
       - id: CONFIG-1-2
+        title: Missing Config Defaults
         description: >
           Given no .spool.yaml file at the project root,
           when config is loaded,
@@ -36,12 +38,14 @@ requirements:
           is returned and no error is produced.
 
       - id: CONFIG-1-3
+        title: Invalid YAML Error
         description: >
           Given a .spool.yaml file with invalid YAML,
           when config is loaded,
           then a descriptive error is returned.
 
       - id: CONFIG-1-4
+        title: Unknown Fields Ignored
         description: >
           Given a .spool.yaml file with valid YAML but unknown
           fields,
@@ -66,20 +70,22 @@ requirements:
       tidy without requiring any configuration for new projects.
     superseded_by:
     acceptance_criteria:
-
       - id: CONFIG-2-1
+        title: Configured Reqs Directory
         description: >
           Given a .spool.yaml with a reqs_dir value,
           when config is loaded,
           then the ReqsDir field reflects the configured value.
 
       - id: CONFIG-2-2
+        title: Default Reqs Directory
         description: >
           Given a .spool.yaml with no reqs_dir value,
           when config is loaded,
           then the ReqsDir field defaults to .spool/.
 
       - id: CONFIG-2-3
+        title: Relative Path Resolution
         description: >
           Given a reqs_dir configured as a relative path,
           when config is loaded,
@@ -106,12 +112,14 @@ requirements:
     acceptance_criteria:
 
       - id: CONFIG-3-1
+        title: Configured Test Patterns
         description: >
           Given a .spool.yaml with a test_patterns list,
           when config is loaded,
           then the TestPatterns field reflects all configured patterns.
 
       - id: CONFIG-3-2
+        title: Default Test Patterns
         description: >
           Given a .spool.yaml with no test_patterns value,
           when config is loaded,
@@ -119,6 +127,7 @@ requirements:
           and no error is produced.
 
       - id: CONFIG-3-3
+        title: Invalid Glob Error
         description: >
           Given a test_patterns list containing an invalid glob,
           when config is loaded,
@@ -146,12 +155,14 @@ requirements:
     acceptance_criteria:
 
       - id: CONFIG-4-1
+        title: Configured Severity Values
         description: >
           Given a .spool.yaml with severity values configured,
           when config is loaded,
           then the Severity struct reflects all configured values.
 
       - id: CONFIG-4-2
+        title: Default Severity Values
         description: >
           Given a .spool.yaml with no severity values configured,
           when config is loaded,
@@ -160,6 +171,7 @@ requirements:
           and missing_ac as info.
 
       - id: CONFIG-4-3
+        title: Invalid Severity Error
         description: >
           Given a severity value that is not one of error,
           warning, info, or off,
