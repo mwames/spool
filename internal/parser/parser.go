@@ -7,9 +7,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 
+	"github.com/mwames/Spool/internal/spoolid"
 	"gopkg.in/yaml.v3"
 )
 
@@ -58,8 +57,6 @@ type ParseResult struct {
 	Errors []FileError
 }
 
-// idPattern matches valid Spool IDs: PREFIX-N or PREFIX-N-N
-var idPattern = regexp.MustCompile(`^[A-Za-z]+-\d+(-\d+)?$`)
 
 // ParseFile parses a single .req file. Returns an error for fatal issues
 // (unreadable file, invalid YAML). Malformed IDs produce warnings on ReqFile.
@@ -124,7 +121,7 @@ func ParseDir(dir string) (*ParseResult, error) {
 func normalizeIDs(rf *ReqFile) {
 	for i := range rf.Requirements {
 		r := &rf.Requirements[i]
-		normalized, err := normalizeID(r.ID)
+		normalized, err := spoolid.NormalizeID(r.ID)
 		if err != nil {
 			rf.Warnings = append(rf.Warnings, fmt.Sprintf("requirement %q: %v", r.ID, err))
 		} else {
@@ -133,7 +130,7 @@ func normalizeIDs(rf *ReqFile) {
 
 		for j := range r.AcceptanceCriteria {
 			ac := &r.AcceptanceCriteria[j]
-			normalized, err := normalizeID(ac.ID)
+			normalized, err := spoolid.NormalizeID(ac.ID)
 			if err != nil {
 				rf.Warnings = append(rf.Warnings, fmt.Sprintf("acceptance criterion %q: %v", ac.ID, err))
 			} else {
@@ -141,25 +138,4 @@ func normalizeIDs(rf *ReqFile) {
 			}
 		}
 	}
-}
-
-func normalizeID(id string) (string, error) {
-	if !idPattern.MatchString(id) {
-		return "", fmt.Errorf("malformed ID %q", id)
-	}
-
-	parts := strings.Split(id, "-")
-	parts[0] = strings.ToUpper(parts[0])
-	for i := 1; i < len(parts); i++ {
-		parts[i] = stripLeadingZeros(parts[i])
-	}
-	return strings.Join(parts, "-"), nil
-}
-
-func stripLeadingZeros(s string) string {
-	i := 0
-	for i < len(s)-1 && s[i] == '0' {
-		i++
-	}
-	return s[i:]
 }
