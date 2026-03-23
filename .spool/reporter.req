@@ -1,0 +1,258 @@
+# .spool/reporter/reporter.req
+
+feature: REPORTER
+
+requirements:
+
+  - id: REPORTER-1
+    title: Report Generation
+    description: >
+      The reporter must generate a Report struct from the
+      index that captures the full traceability summary
+      across all features.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Separating report data from report presentation means
+      all formatters work from the same data structure and
+      formatting concerns are fully isolated from data
+      collection concerns.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: REPORTER-1-1
+        description: >
+          Given a populated index,
+          when a report is generated,
+          then the Report struct contains accurate totals for
+          requirements, ACs, linked ACs, untested ACs, and
+          orphaned annotations across all features.
+
+      - id: REPORTER-1-2
+        description: >
+          Given a populated index,
+          when a report is generated,
+          then the Report struct contains a FeatureReport
+          for each feature in the index with accurate
+          per-feature totals.
+
+      - id: REPORTER-1-3
+        description: >
+          Given a populated index,
+          when a report is generated,
+          then the Report struct contains the full list of
+          untested ACs with their IDs and descriptions.
+
+      - id: REPORTER-1-4
+        description: >
+          Given a populated index,
+          when a report is generated,
+          then the Report struct contains the full list of
+          orphaned annotations with their file paths and
+          line numbers.
+
+      - id: REPORTER-1-5
+        description: >
+          Given an empty index,
+          when a report is generated,
+          then a valid Report struct with zero totals is
+          returned and no error is produced.
+
+  - id: REPORTER-2
+    title: Formatter Interface
+    description: >
+      The reporter must expose a Formatter interface that
+      allows multiple output formats to be supported and
+      third party formatters to be registered.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      A published Formatter interface keeps output format
+      concerns fully decoupled from report data concerns,
+      allows the compiled-in formatter set to be extended
+      without modifying core code, and enables community
+      formatters for formats Spool does not ship with.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: REPORTER-2-1
+        description: >
+          Given the published Formatter interface,
+          then it must expose only Format(report *Report)
+          ([]byte, error) as a required method.
+
+      - id: REPORTER-2-2
+        description: >
+          Given a third party formatter that implements
+          the Formatter interface,
+          when it is passed to the reporter,
+          then it produces output from the same Report
+          struct as compiled-in formatters.
+
+  - id: REPORTER-3
+    title: Plain Text Formatter
+    description: >
+      Spool must ship a plain text formatter producing
+      a human readable report suitable for terminal output.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Plain text is the universal fallback for developer
+      tooling output. It requires no rendering, works in
+      any terminal, and is immediately readable without
+      additional tooling.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: REPORTER-3-1
+        description: >
+          Given a populated Report struct,
+          when the plain text formatter is applied,
+          then the output contains a summary table with
+          per-feature rows showing req, AC, linked,
+          untested, and orphaned counts.
+
+      - id: REPORTER-3-2
+        description: >
+          Given a Report struct containing untested ACs,
+          when the plain text formatter is applied,
+          then each untested AC is listed with its ID
+          and description.
+
+      - id: REPORTER-3-3
+        description: >
+          Given a Report struct containing orphaned annotations,
+          when the plain text formatter is applied,
+          then each orphaned annotation is listed with its
+          file path, line number, and referenced ID.
+
+      - id: REPORTER-3-4
+        description: >
+          Given a Report struct with no untested ACs and
+          no orphaned annotations,
+          when the plain text formatter is applied,
+          then the output indicates full traceability
+          with no issues found.
+
+  - id: REPORTER-4
+    title: JSON Formatter
+    description: >
+      Spool must ship a JSON formatter producing machine
+      readable output suitable for CI tooling and piping.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      JSON output allows CI pipelines, scripts, and third
+      party tools to consume Spool report data without
+      screen scraping plain text. It also provides a stable
+      contract for tooling built on top of Spool reports.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: REPORTER-4-1
+        description: >
+          Given a populated Report struct,
+          when the JSON formatter is applied,
+          then the output is valid JSON containing all
+          report data including totals, per-feature
+          breakdowns, untested ACs, and orphaned annotations.
+
+      - id: REPORTER-4-2
+        description: >
+          Given a populated Report struct,
+          when the JSON formatter is applied,
+          then the JSON structure mirrors the Report struct
+          hierarchy with camelCase field names.
+
+  - id: REPORTER-5
+    title: Markdown Formatter
+    description: >
+      Spool must ship a markdown formatter producing output
+      suitable for inclusion in pull request comments,
+      wiki pages, and project documentation.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Markdown output allows Spool reports to be dropped
+      directly into GitLab or GitHub PR comments, wiki pages,
+      or README files without any transformation. This is
+      particularly valuable for teams that want to include
+      traceability status in their PR review process.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: REPORTER-5-1
+        description: >
+          Given a populated Report struct,
+          when the markdown formatter is applied,
+          then the output contains a valid markdown table
+          with per-feature rows showing req, AC, linked,
+          untested, and orphaned counts.
+
+      - id: REPORTER-5-2
+        description: >
+          Given a Report struct containing untested ACs,
+          when the markdown formatter is applied,
+          then each untested AC is listed under a dedicated
+          markdown section with its ID and description.
+
+      - id: REPORTER-5-3
+        description: >
+          Given a Report struct containing orphaned annotations,
+          when the markdown formatter is applied,
+          then each orphaned annotation is listed under a
+          dedicated markdown section with its file path,
+          line number, and referenced ID.
+
+  - id: REPORTER-6
+    title: Report Output
+    description: >
+      The reporter must write formatted output to the
+      configured destination.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Separating output destination from formatting means
+      the same formatter can write to stdout during local
+      development and to a file in CI without any change
+      to the formatter itself.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: REPORTER-6-1
+        description: >
+          Given an output destination of stdout,
+          when the report is written,
+          then formatted output is written to stdout.
+
+      - id: REPORTER-6-2
+        description: >
+          Given an output destination of a file path,
+          when the report is written,
+          then formatted output is written to that file,
+          creating it if it does not exist.
+
+      - id: REPORTER-6-3
+        description: >
+          Given an output destination of a file path
+          that cannot be written to,
+          when the report is written,
+          then a descriptive error is returned.

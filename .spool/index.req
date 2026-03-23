@@ -1,0 +1,244 @@
+# .spool/index/index.req
+
+feature: INDEX
+
+requirements:
+
+  - id: INDEX-1
+    title: Index Construction
+    description: >
+      The index must be constructable from the combined output
+      of the parser and scanner, producing a unified in-memory
+      graph of requirements, ACs, and their linked test functions.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      The index is the single source of truth for the full
+      traceability graph. Separating construction from querying
+      keeps the index predictable and easy to test. The parser
+      and scanner are independent inputs — neither knows about
+      the other — and the index is where their outputs are joined.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INDEX-1-1
+        description: >
+          Given parsed req files and scanned test annotations,
+          when the index is constructed,
+          then all requirements and ACs from the parsed files
+          are present in the graph.
+
+      - id: INDEX-1-2
+        description: >
+          Given parsed req files and scanned test annotations,
+          when the index is constructed,
+          then each AC is linked to all test functions that
+          annotate it.
+
+      - id: INDEX-1-3
+        description: >
+          Given parsed req files and scanned test annotations,
+          when the index is constructed,
+          then the feature hierarchy is derived from requirement
+          ID prefixes and correctly groups requirements and ACs.
+
+      - id: INDEX-1-4
+        description: >
+          Given no parsed req files and no scanned annotations,
+          when the index is constructed,
+          then an empty but valid index is returned and
+          no error is produced.
+
+  - id: INDEX-2
+    title: ID Uniqueness Validation
+    description: >
+      The index must validate that all requirement and AC IDs
+      are unique across the full set of parsed req files.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      ID uniqueness is fundamental to the integrity of the
+      traceability graph. Duplicate IDs are detected at index
+      construction time rather than parse time because uniqueness
+      can only be determined once all files have been parsed.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INDEX-2-1
+        description: >
+          Given two req files containing the same requirement ID,
+          when the index is constructed,
+          then an error is recorded identifying the duplicate ID
+          and the files in which it appears.
+
+      - id: INDEX-2-2
+        description: >
+          Given two req files containing the same AC ID,
+          when the index is constructed,
+          then an error is recorded identifying the duplicate ID
+          and the files in which it appears.
+
+      - id: INDEX-2-3
+        description: >
+          Given all unique IDs across all req files,
+          when the index is constructed,
+          then no uniqueness errors are recorded.
+
+  - id: INDEX-3
+    title: Feature Prefix Validation
+    description: >
+      The index must validate that all requirement and AC IDs
+      within a req file are consistent with the declared
+      feature of that file.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      The feature field in a req file is redundant with the ID
+      prefix by design, which creates a validation opportunity.
+      A mismatch between the declared feature and an ID prefix
+      is almost certainly an authoring error and should be
+      surfaced immediately.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INDEX-3-1
+        description: >
+          Given a req file where a requirement ID prefix does not
+          match the declared feature,
+          when the index is constructed,
+          then an error is recorded identifying the mismatched ID
+          and the file in which it appears.
+
+      - id: INDEX-3-2
+        description: >
+          Given a req file where all requirement and AC ID prefixes
+          match the declared feature,
+          when the index is constructed,
+          then no prefix mismatch errors are recorded.
+
+  - id: INDEX-4
+    title: Untested AC Detection
+    description: >
+      The index must identify all ACs that have no linked
+      test functions.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Untested ACs represent gaps in test coverage at the
+      requirements level. Surfacing them explicitly allows
+      teams to prioritize test writing and gives CI pipelines
+      a hook for enforcing coverage policy via configurable
+      severity.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INDEX-4-1
+        description: >
+          Given an AC with no linked test functions,
+          when the index is queried,
+          then the AC appears in the untested AC collection.
+
+      - id: INDEX-4-2
+        description: >
+          Given an AC with one or more linked test functions,
+          when the index is queried,
+          then the AC does not appear in the untested AC collection.
+
+  - id: INDEX-5
+    title: Orphaned Annotation Detection
+    description: >
+      The index must identify all test annotations that reference
+      an ID that does not exist in any parsed req file.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Orphaned annotations indicate a broken link in the
+      traceability graph — either a typo in the annotation,
+      a requirement that was deleted without updating its
+      annotations, or an annotation added before the
+      corresponding req was authored. All cases represent
+      actionable inconsistencies that should be surfaced.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INDEX-5-1
+        description: >
+          Given a test annotation referencing an ID that does
+          not exist in any parsed req file,
+          when the index is constructed,
+          then the annotation appears in the orphaned
+          annotation collection with its file and line number.
+
+      - id: INDEX-5-2
+        description: >
+          Given all test annotations referencing IDs that exist
+          in parsed req files,
+          when the index is constructed,
+          then the orphaned annotation collection is empty.
+
+  - id: INDEX-6
+    title: Index Querying
+    description: >
+      The index must expose a query interface that allows
+      consumers to retrieve traceability data at any level
+      of the hierarchy.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      A well defined query interface decouples the index
+      internals from its consumers. The reporter, LSP handlers,
+      and any future consumers should interact with the index
+      exclusively through this interface rather than accessing
+      the graph directly.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INDEX-6-1
+        description: >
+          Given a valid feature name,
+          when the index is queried by feature,
+          then all requirements belonging to that feature
+          are returned.
+
+      - id: INDEX-6-2
+        description: >
+          Given a valid requirement ID,
+          when the index is queried by requirement ID,
+          then the requirement and all its ACs are returned.
+
+      - id: INDEX-6-3
+        description: >
+          Given a valid AC ID,
+          when the index is queried by AC ID,
+          then the AC and all its linked test functions
+          are returned.
+
+      - id: INDEX-6-4
+        description: >
+          Given an ID that does not exist in the index,
+          when the index is queried,
+          then nil and no error is returned.
+
+      - id: INDEX-6-5
+        description: >
+          Given a populated index,
+          when all features are requested,
+          then all features present in the index are returned.
