@@ -1,0 +1,162 @@
+# .spool/parser/parser.req
+
+feature: PARSER
+
+requirements:
+  - id: PARSER-1
+    title: Req File Parsing
+    description: >
+      The parser must deserialize a valid .req YAML file
+      into an in-memory ReqFile struct.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      YAML was chosen for its broad parser support across languages,
+      unambiguous structure, and low risk of parsing edge cases.
+      Ergonomics are delegated to IDE tooling rather than the file format.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: PARSER-1-1
+        description: >
+          Given a valid .req file,
+          when the file is parsed,
+          then a ReqFile struct is returned with the feature,
+          and all requirements and ACs correctly populated.
+
+      - id: PARSER-1-2
+        description: >
+          Given a .req file with zero requirements,
+          when the file is parsed,
+          then a ReqFile struct is returned with an empty
+          requirements slice and no error is produced.
+
+      - id: PARSER-1-3
+        description: >
+          Given a .req file with a requirement that has zero ACs,
+          when the file is parsed,
+          then the requirement is returned with an empty ACs slice
+          and no error is produced.
+
+      - id: PARSER-1-4
+        description: >
+          Given a .req file,
+          when the file is parsed,
+          then the SourceFile field of the returned ReqFile is
+          populated with the absolute path of the parsed file.
+
+  - id: PARSER-2
+    title: ID Normalization
+    description: >
+      The parser must normalize all requirement and AC IDs
+      to a canonical form on read, regardless of how they
+      were authored.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Normalization at parse time means the rest of the system
+      operates on a single canonical form and never needs to
+      account for casing or zero-padding variations. This is
+      the only place normalization should occur.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: PARSER-2-1
+        description: >
+          Given an ID authored in lowercase,
+          when the file is parsed,
+          then the ID is normalized to uppercase.
+
+      - id: PARSER-2-2
+        description: >
+          Given an ID with leading zeros in the requirement
+          or AC number segments,
+          when the file is parsed,
+          then the leading zeros are stripped.
+
+      - id: PARSER-2-3
+        description: >
+          Given an ID that is already in canonical form,
+          when the file is parsed,
+          then the ID is unchanged.
+
+  - id: PARSER-3
+    title: Directory Traversal
+    description: >
+      The parser must recursively walk the configured reqs_dir
+      and parse all discovered .req files.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Recursive traversal allows institutions to organize their
+      .req files in arbitrary nested folder structures without
+      any configuration beyond the root reqs_dir. The in-memory
+      representation is flat regardless of nesting.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: PARSER-3-1
+        description: >
+          Given a reqs_dir containing .req files in arbitrarily
+          nested subdirectories,
+          when the directory is traversed,
+          then all .req files at all nesting levels are parsed.
+
+      - id: PARSER-3-2
+        description: >
+          Given a reqs_dir containing non-.req files,
+          when the directory is traversed,
+          then non-.req files are silently ignored.
+
+      - id: PARSER-3-3
+        description: >
+          Given a reqs_dir that does not exist,
+          when the directory is traversed,
+          then a descriptive error is returned.
+
+      - id: PARSER-3-4
+        description: >
+          Given a reqs_dir that exists but contains no .req files,
+          when the directory is traversed,
+          then an empty slice is returned and no error is produced.
+
+  - id: PARSER-4
+    title: Parse Error Handling
+    description: >
+      The parser must handle malformed .req files gracefully
+      without crashing the language server.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      A file being actively edited will frequently be in an invalid
+      state. The LSP must remain stable and useful during editing,
+      surfacing diagnostics rather than crashing or dropping the
+      entire index.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: PARSER-4-1
+        description: >
+          Given a .req file with invalid YAML,
+          when the file is parsed,
+          then an error is returned for that file and
+          parsing continues for all other files.
+
+      - id: PARSER-4-2
+        description: >
+          Given a .req file with a malformed ID,
+          when the file is parsed,
+          then an error is recorded for that requirement and
+          the remaining requirements in the file are still parsed.

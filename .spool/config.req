@@ -1,0 +1,168 @@
+# .spool/config/config.req
+
+feature: CONFIG
+
+requirements:
+  - id: CONFIG-1
+    title: Config File Loading
+    description: >
+      Spool must load its configuration from a .spool.yaml
+      file at the project root.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      A single config file at the project root is the most
+      discoverable convention and consistent with the broader
+      ecosystem of developer tooling. The .spool namespace
+      keeps all Spool artifacts clearly identifiable.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: CONFIG-1-1
+        description: >
+          Given a .spool.yaml file at the project root,
+          when config is loaded,
+          then the file is parsed and a populated Config
+          struct is returned.
+
+      - id: CONFIG-1-2
+        description: >
+          Given no .spool.yaml file at the project root,
+          when config is loaded,
+          then a Config struct populated with default values
+          is returned and no error is produced.
+
+      - id: CONFIG-1-3
+        description: >
+          Given a .spool.yaml file with invalid YAML,
+          when config is loaded,
+          then a descriptive error is returned.
+
+      - id: CONFIG-1-4
+        description: >
+          Given a .spool.yaml file with valid YAML but unknown
+          fields,
+          when config is loaded,
+          then the known fields are populated, unknown fields
+          are ignored, and no error is produced.
+
+  - id: CONFIG-2
+    title: Reqs Directory Configuration
+    description: >
+      Spool must allow the reqs directory to be configured
+      and must default to .spool/ relative to the project root.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      A configurable reqs directory allows institutions to place
+      their .req files wherever suits their project structure.
+      The .spool/ default keeps Spool's footprint namespaced and
+      tidy without requiring any configuration for new projects.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: CONFIG-2-1
+        description: >
+          Given a .spool.yaml with a reqs_dir value,
+          when config is loaded,
+          then the ReqsDir field reflects the configured value.
+
+      - id: CONFIG-2-2
+        description: >
+          Given a .spool.yaml with no reqs_dir value,
+          when config is loaded,
+          then the ReqsDir field defaults to .spool/.
+
+      - id: CONFIG-2-3
+        description: >
+          Given a reqs_dir configured as a relative path,
+          when config is loaded,
+          then the path is resolved relative to the project root.
+
+  - id: CONFIG-3
+    title: Test Pattern Configuration
+    description: >
+      Spool must allow one or more glob patterns to be configured
+      identifying which files the scanner should treat as test files.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Glob-based test file identification is simple, universal,
+      and sufficient for the vast majority of projects. A smart
+      test file detector may be introduced later if demand warrants
+      it, but configurable patterns avoid premature complexity
+      while keeping Spool immediately useful across different
+      languages and project structures.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: CONFIG-3-1
+        description: >
+          Given a .spool.yaml with a test_patterns list,
+          when config is loaded,
+          then the TestPatterns field reflects all configured patterns.
+
+      - id: CONFIG-3-2
+        description: >
+          Given a .spool.yaml with no test_patterns value,
+          when config is loaded,
+          then the TestPatterns field defaults to an empty slice
+          and no error is produced.
+
+      - id: CONFIG-3-3
+        description: >
+          Given a test_patterns list containing an invalid glob,
+          when config is loaded,
+          then a descriptive error is returned identifying
+          the invalid pattern.
+
+  - id: CONFIG-4
+    title: Diagnostic Severity Configuration
+    description: >
+      Spool must allow the severity of each diagnostic class
+      to be configured independently.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Different institutions have different tolerances for
+      diagnostic severity. A regulated industry may require
+      untested ACs to be errors that fail CI, while a startup
+      may prefer them as informational. Configurable severity
+      ensures Spool is useful across both contexts without
+      imposing opinions.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: CONFIG-4-1
+        description: >
+          Given a .spool.yaml with severity values configured,
+          when config is loaded,
+          then the Severity struct reflects all configured values.
+
+      - id: CONFIG-4-2
+        description: >
+          Given a .spool.yaml with no severity values configured,
+          when config is loaded,
+          then the following defaults are applied:
+          untested_ac as warning, orphaned_annotation as error,
+          and missing_ac as info.
+
+      - id: CONFIG-4-3
+        description: >
+          Given a severity value that is not one of error,
+          warning, info, or off,
+          when config is loaded,
+          then a descriptive error is returned identifying
+          the invalid value.

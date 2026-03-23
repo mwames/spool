@@ -1,0 +1,269 @@
+# .spool/scanner/scanner.req
+
+feature: SCANNER
+
+requirements:
+  - id: SCANNER-1
+    title: Annotation Detection
+    description: >
+      The scanner must detect valid Spool ID annotations
+      in test files and record their location.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Annotations are comment lines containing nothing but a valid
+      Spool ID. Keeping the annotation format strict eliminates
+      false positives and establishes an unambiguous convention.
+      ID normalization is applied at scan time so the rest of the
+      system operates on canonical IDs only.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-1-1
+        description: >
+          Given a test file containing a comment line with a valid
+          Spool ID and nothing else,
+          when the file is scanned,
+          then the annotation is detected and its line number recorded.
+
+      - id: SCANNER-1-2
+        description: >
+          Given a test file containing a comment line with a valid
+          Spool ID in non-canonical form (lowercase, leading zeros),
+          when the file is scanned,
+          then the annotation is detected and its ID normalized
+          to canonical form.
+
+      - id: SCANNER-1-3
+        description: >
+          Given a test file containing a comment line with additional
+          content alongside a valid Spool ID,
+          when the file is scanned,
+          then the line is not treated as an annotation.
+
+      - id: SCANNER-1-4
+        description: >
+          Given a test file containing no annotations,
+          when the file is scanned,
+          then an empty result is returned and no error is produced.
+
+  - id: SCANNER-2
+    title: Annotation Association
+    description: >
+      The scanner must associate detected annotations with the
+      test function that follows them, regardless of what
+      appears between the annotation and the function.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Association is based on the next test function following
+      an annotation rather than the next non-blank line, because
+      line numbers are fragile and function names are the meaningful
+      unit of traceability. Intervening blank lines, comments, or
+      other non-test content should not break the association.
+      Interpreter plugins are responsible for identifying test
+      function boundaries.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-2-1
+        description: >
+          Given an annotation immediately followed by a test function,
+          when the file is scanned,
+          then the annotation is associated with that test function.
+
+      - id: SCANNER-2-2
+        description: >
+          Given an annotation separated from the next test function
+          by blank lines or non-test code,
+          when the file is scanned,
+          then the annotation is still associated with that
+          test function.
+
+      - id: SCANNER-2-3
+        description: >
+          Given multiple stacked annotations immediately preceding
+          a test function,
+          when the file is scanned,
+          then all stacked annotations are associated with
+          that test function.
+
+      - id: SCANNER-2-4
+        description: >
+          Given a single AC ID annotating multiple test functions,
+          when the file is scanned,
+          then the ID is associated with all annotated test functions.
+
+      - id: SCANNER-2-5
+        description: >
+          Given an annotation with no following test function
+          in the file,
+          when the file is scanned,
+          then the annotation is recorded as orphaned and
+          no error is produced.
+
+  - id: SCANNER-3
+    title: Interpreter Registry
+    description: >
+      The scanner must maintain a registry of compiled-in
+      interpreters and select the appropriate one for each
+      test file.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Pluggable interpreters keep the scanner language agnostic
+      while allowing language-specific test function extraction.
+      Interpreter selection is driven by the configured test_patterns
+      so that pattern configuration and interpreter availability
+      are naturally coupled. Files with no matching interpreter
+      are skipped gracefully.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-3-1
+        description: >
+          Given a test file whose name matches a configured
+          test_pattern and a registered interpreter that supports
+          that filename,
+          when the file is scanned,
+          then the matching interpreter is used for test
+          function extraction.
+
+      - id: SCANNER-3-2
+        description: >
+          Given a test file whose name matches a configured
+          test_pattern but no registered interpreter supports
+          that filename,
+          when the file is scanned,
+          then the file is skipped and a warning is recorded.
+
+      - id: SCANNER-3-3
+        description: >
+          Given multiple registered interpreters,
+          when a test file is scanned,
+          then the first interpreter whose Supports() returns
+          true for that filename is used.
+
+  - id: SCANNER-4
+    title: Compiled-in Interpreters
+    description: >
+      Spool must ship with compiled-in interpreters covering
+      mainstream testing frameworks.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Providing interpreters for Go, JUnit, Jest, and Playwright
+      out of the box means Spool is immediately useful for the
+      majority of real-world codebases without requiring any
+      additional setup or community contributions.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-4-1
+        description: >
+          Given a Go test file,
+          when test functions are extracted,
+          then all functions matching the Test* naming convention
+          with a *testing.T parameter are returned with their
+          names and line numbers.
+
+      - id: SCANNER-4-2
+        description: >
+          Given a JUnit test file,
+          when test functions are extracted,
+          then all methods annotated with @Test are returned
+          with their names and line numbers.
+
+      - id: SCANNER-4-3
+        description: >
+          Given a Jest test file,
+          when test functions are extracted,
+          then all it() and test() calls are returned with
+          their description strings and line numbers.
+
+      - id: SCANNER-4-4
+        description: >
+          Given a Playwright test file,
+          when test functions are extracted,
+          then all test() calls from @playwright/test are
+          returned with their description strings and
+          line numbers.
+
+  - id: SCANNER-5
+    title: Interpreter Interface
+    description: >
+      Spool must publish a stable interpreter interface
+      that allows third parties to implement and register
+      custom interpreters.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Publishing the interpreter interface lowers the barrier
+      for community contributions and allows teams with
+      non-mainstream testing frameworks to extend Spool
+      without forking the project. The interface is intentionally
+      minimal to keep the implementation burden low.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-5-1
+        description: >
+          Given a third-party interpreter that implements the
+          Interpreter interface,
+          when it is registered with the scanner,
+          then it participates in interpreter selection alongside
+          compiled-in interpreters.
+
+      - id: SCANNER-5-2
+        description: >
+          Given the published Interpreter interface,
+          then it must expose only Supports(filename string) bool
+          and ExtractTestFunctions(filename string, contents []byte)
+          as required methods.
+
+  - id: SCANNER-6
+    title: Scanner Error Handling
+    description: >
+      The scanner must handle unreadable or unparseable test
+      files gracefully without crashing the language server.
+    status: active
+    deciders:
+      - Project Lead
+    consulted: []
+    date: 2026-03-23
+    rationale: >
+      Consistent with the parser's fault tolerance philosophy,
+      a single bad test file must never destabilize the index
+      or crash the LSP. Errors are recorded as diagnostics
+      and scanning continues.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-6-1
+        description: >
+          Given a test file that cannot be read,
+          when the file is scanned,
+          then an error is recorded for that file and
+          scanning continues for all remaining files.
+
+      - id: SCANNER-6-2
+        description: >
+          Given a test file that cannot be parsed by its interpreter,
+          when the file is scanned,
+          then an error is recorded for that file and
+          scanning continues for all remaining files.
