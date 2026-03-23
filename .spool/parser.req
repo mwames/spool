@@ -21,6 +21,7 @@ requirements:
     acceptance_criteria:
 
       - id: PARSER-1-1
+        title: Valid File Parsing
         description: >
           Given a valid .req file,
           when the file is parsed,
@@ -28,6 +29,7 @@ requirements:
           and all requirements and ACs correctly populated.
 
       - id: PARSER-1-2
+        title: Zero Requirements
         description: >
           Given a .req file with zero requirements,
           when the file is parsed,
@@ -35,6 +37,7 @@ requirements:
           requirements slice and no error is produced.
 
       - id: PARSER-1-3
+        title: Zero Acceptance Criteria
         description: >
           Given a .req file with a requirement that has zero ACs,
           when the file is parsed,
@@ -42,6 +45,7 @@ requirements:
           and no error is produced.
 
       - id: PARSER-1-4
+        title: Source File Path
         description: >
           Given a .req file,
           when the file is parsed,
@@ -68,12 +72,14 @@ requirements:
     acceptance_criteria:
 
       - id: PARSER-2-1
+        title: Lowercase to Uppercase
         description: >
           Given an ID authored in lowercase,
           when the file is parsed,
           then the ID is normalized to uppercase.
 
       - id: PARSER-2-2
+        title: Leading Zeros Stripped
         description: >
           Given an ID with leading zeros in the requirement
           or AC number segments,
@@ -81,6 +87,7 @@ requirements:
           then the leading zeros are stripped.
 
       - id: PARSER-2-3
+        title: Canonical ID Unchanged
         description: >
           Given an ID that is already in canonical form,
           when the file is parsed,
@@ -105,6 +112,7 @@ requirements:
     acceptance_criteria:
 
       - id: PARSER-3-1
+        title: Nested Directory Parsing
         description: >
           Given a reqs_dir containing .req files in arbitrarily
           nested subdirectories,
@@ -112,18 +120,21 @@ requirements:
           then all .req files at all nesting levels are parsed.
 
       - id: PARSER-3-2
+        title: Non-Req Files Ignored
         description: >
           Given a reqs_dir containing non-.req files,
           when the directory is traversed,
           then non-.req files are silently ignored.
 
       - id: PARSER-3-3
+        title: Missing Directory Error
         description: >
           Given a reqs_dir that does not exist,
           when the directory is traversed,
           then a descriptive error is returned.
 
       - id: PARSER-3-4
+        title: Empty Directory
         description: >
           Given a reqs_dir that exists but contains no .req files,
           when the directory is traversed,
@@ -148,6 +159,7 @@ requirements:
     acceptance_criteria:
 
       - id: PARSER-4-1
+        title: Invalid YAML Continuity
         description: >
           Given a .req file with invalid YAML,
           when the file is parsed,
@@ -155,6 +167,7 @@ requirements:
           parsing continues for all other files.
 
       - id: PARSER-4-2
+        title: Malformed ID Warning
         description: >
           Given a .req file with a malformed ID,
           when the file is parsed,
