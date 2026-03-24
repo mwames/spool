@@ -94,8 +94,12 @@ func detectAnnotations(contents []byte) []Annotation {
 		for _, prefix := range commentPrefixes {
 			if strings.HasPrefix(trimmed, prefix) {
 				body := strings.TrimSpace(trimmed[len(prefix):])
-				if spoolid.IsValid(body) {
-					normalized, _ := spoolid.NormalizeID(body)
+				candidate := body
+				if idx := strings.Index(body, ":"); idx > 0 {
+					candidate = strings.TrimSpace(body[:idx])
+				}
+				if spoolid.IsValid(candidate) {
+					normalized, _ := spoolid.NormalizeID(candidate)
 					anns = append(anns, Annotation{ID: normalized, Line: i + 1})
 				}
 				break

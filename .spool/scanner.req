@@ -26,7 +26,7 @@ requirements:
         title: Annotation Detected
         description: >
           Given a test file containing a comment line with a valid
-          Spool ID and nothing else,
+          Spool ID optionally followed by a colon and title,
           when the file is scanned,
           then the annotation is detected and its line number recorded.
 

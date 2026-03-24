@@ -41,6 +41,8 @@ func TestLoad_MissingFile(t *testing.T) {
 }
 
 // CONFIG-1-1: Valid Config Parsing
+// CONFIG-3-1: Configured Test Patterns
+// CONFIG-4-1: Configured Severity Values
 func TestLoad_ValidFile(t *testing.T) {
 	dir := t.TempDir()
 	writeConfig(t, dir, `

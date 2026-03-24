@@ -24,6 +24,7 @@ requirements:
     acceptance_criteria:
 
       - id: REPORTER-1-1
+        title: Accurate Totals
         description: >
           Given a populated index,
           when a report is generated,
@@ -32,14 +33,18 @@ requirements:
           orphaned annotations across all features.
 
       - id: REPORTER-1-2
+        title: Per-Feature Totals
         description: >
           Given a populated index,
           when a report is generated,
           then the Report struct contains a FeatureReport
           for each feature in the index with accurate
-          per-feature totals.
+          per-feature totals reflecting only active requirements,
+          and a separate count of excluded superseded and
+          deprecated requirements.
 
       - id: REPORTER-1-3
+        title: Untested ACs List
         description: >
           Given a populated index,
           when a report is generated,
@@ -47,6 +52,7 @@ requirements:
           untested ACs with their IDs and descriptions.
 
       - id: REPORTER-1-4
+        title: Orphaned Annotations List
         description: >
           Given a populated index,
           when a report is generated,
@@ -55,6 +61,7 @@ requirements:
           line numbers.
 
       - id: REPORTER-1-5
+        title: Empty Report
         description: >
           Given an empty index,
           when a report is generated,
@@ -82,12 +89,14 @@ requirements:
     acceptance_criteria:
 
       - id: REPORTER-2-1
+        title: Minimal Interface Contract
         description: >
           Given the published Formatter interface,
           then it must expose only Format(report *Report)
           ([]byte, error) as a required method.
 
       - id: REPORTER-2-2
+        title: Third-Party Formatter
         description: >
           Given a third party formatter that implements
           the Formatter interface,
@@ -114,6 +123,7 @@ requirements:
     acceptance_criteria:
 
       - id: REPORTER-3-1
+        title: Summary Table
         description: >
           Given a populated Report struct,
           when the plain text formatter is applied,
@@ -122,6 +132,7 @@ requirements:
           untested, and orphaned counts.
 
       - id: REPORTER-3-2
+        title: Untested ACs Listed
         description: >
           Given a Report struct containing untested ACs,
           when the plain text formatter is applied,
@@ -129,6 +140,7 @@ requirements:
           and description.
 
       - id: REPORTER-3-3
+        title: Orphaned Listed
         description: >
           Given a Report struct containing orphaned annotations,
           when the plain text formatter is applied,
@@ -136,12 +148,22 @@ requirements:
           file path, line number, and referenced ID.
 
       - id: REPORTER-3-4
+        title: No Issues Message
         description: >
           Given a Report struct with no untested ACs and
           no orphaned annotations,
           when the plain text formatter is applied,
           then the output indicates full traceability
           with no issues found.
+
+      - id: REPORTER-3-5
+        title: Excluded Reqs Shown
+        description: >
+          Given a Report struct containing superseded or
+          deprecated requirements,
+          when the plain text formatter is applied,
+          then the per-feature summary indicates the count
+          of excluded requirements alongside the active totals.
 
   - id: REPORTER-4
     title: JSON Formatter
@@ -162,6 +184,7 @@ requirements:
     acceptance_criteria:
 
       - id: REPORTER-4-1
+        title: Valid JSON Output
         description: >
           Given a populated Report struct,
           when the JSON formatter is applied,
@@ -170,6 +193,7 @@ requirements:
           breakdowns, untested ACs, and orphaned annotations.
 
       - id: REPORTER-4-2
+        title: CamelCase Field Names
         description: >
           Given a populated Report struct,
           when the JSON formatter is applied,
@@ -197,6 +221,7 @@ requirements:
     acceptance_criteria:
 
       - id: REPORTER-5-1
+        title: Markdown Table
         description: >
           Given a populated Report struct,
           when the markdown formatter is applied,
@@ -205,6 +230,7 @@ requirements:
           untested, and orphaned counts.
 
       - id: REPORTER-5-2
+        title: Untested Section
         description: >
           Given a Report struct containing untested ACs,
           when the markdown formatter is applied,
@@ -212,12 +238,22 @@ requirements:
           markdown section with its ID and description.
 
       - id: REPORTER-5-3
+        title: Orphaned Section
         description: >
           Given a Report struct containing orphaned annotations,
           when the markdown formatter is applied,
           then each orphaned annotation is listed under a
           dedicated markdown section with its file path,
           line number, and referenced ID.
+
+      - id: REPORTER-5-4
+        title: Excluded Reqs in Table
+        description: >
+          Given a Report struct containing superseded or
+          deprecated requirements,
+          when the markdown formatter is applied,
+          then the per-feature table indicates the count of
+          excluded requirements alongside the active totals.
 
   - id: REPORTER-6
     title: Report Output
@@ -238,12 +274,14 @@ requirements:
     acceptance_criteria:
 
       - id: REPORTER-6-1
+        title: Write to Stdout
         description: >
           Given an output destination of stdout,
           when the report is written,
           then formatted output is written to stdout.
 
       - id: REPORTER-6-2
+        title: Write to File
         description: >
           Given an output destination of a file path,
           when the report is written,
@@ -251,6 +289,7 @@ requirements:
           creating it if it does not exist.
 
       - id: REPORTER-6-3
+        title: Unwritable Destination Error
         description: >
           Given an output destination of a file path
           that cannot be written to,

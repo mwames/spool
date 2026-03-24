@@ -80,6 +80,18 @@ func TestDetectAnnotations_LineNumbers(t *testing.T) {
 	}
 }
 
+// SCANNER-1-1: Annotation Detected
+func TestDetectAnnotations_WithTitle(t *testing.T) {
+	src := []byte("// AUTH-1-1: Valid Credentials\n")
+	anns := detectAnnotations(src)
+	if len(anns) != 1 {
+		t.Fatalf("got %d annotations, want 1", len(anns))
+	}
+	if anns[0].ID != "AUTH-1-1" {
+		t.Errorf("ID = %q, want %q", anns[0].ID, "AUTH-1-1")
+	}
+}
+
 func TestDetectAnnotations_IndentedComment(t *testing.T) {
 	src := []byte("  // AUTH-1-1\n")
 	anns := detectAnnotations(src)
