@@ -25,6 +25,7 @@ requirements:
     acceptance_criteria:
 
       - id: INDEX-1-1
+        title: All Reqs and ACs Present
         description: >
           Given parsed req files and scanned test annotations,
           when the index is constructed,
@@ -32,6 +33,7 @@ requirements:
           are present in the graph.
 
       - id: INDEX-1-2
+        title: ACs Linked to Tests
         description: >
           Given parsed req files and scanned test annotations,
           when the index is constructed,
@@ -39,6 +41,7 @@ requirements:
           annotate it.
 
       - id: INDEX-1-3
+        title: Feature Hierarchy
         description: >
           Given parsed req files and scanned test annotations,
           when the index is constructed,
@@ -46,6 +49,7 @@ requirements:
           ID prefixes and correctly groups requirements and ACs.
 
       - id: INDEX-1-4
+        title: Empty Index
         description: >
           Given no parsed req files and no scanned annotations,
           when the index is constructed,
@@ -71,6 +75,7 @@ requirements:
     acceptance_criteria:
 
       - id: INDEX-2-1
+        title: Duplicate Requirement ID
         description: >
           Given two req files containing the same requirement ID,
           when the index is constructed,
@@ -78,6 +83,7 @@ requirements:
           and the files in which it appears.
 
       - id: INDEX-2-2
+        title: Duplicate AC ID
         description: >
           Given two req files containing the same AC ID,
           when the index is constructed,
@@ -85,6 +91,7 @@ requirements:
           and the files in which it appears.
 
       - id: INDEX-2-3
+        title: All IDs Unique
         description: >
           Given all unique IDs across all req files,
           when the index is constructed,
@@ -111,6 +118,7 @@ requirements:
     acceptance_criteria:
 
       - id: INDEX-3-1
+        title: Mismatched Prefix Error
         description: >
           Given a req file where a requirement ID prefix does not
           match the declared feature,
@@ -119,6 +127,7 @@ requirements:
           and the file in which it appears.
 
       - id: INDEX-3-2
+        title: Matching Prefixes
         description: >
           Given a req file where all requirement and AC ID prefixes
           match the declared feature,
@@ -128,8 +137,8 @@ requirements:
   - id: INDEX-4
     title: Untested AC Detection
     description: >
-      The index must identify all ACs that have no linked
-      test functions.
+      The index must identify all ACs belonging to active
+      requirements that have no linked test functions.
     status: active
     deciders:
       - Project Lead
@@ -137,24 +146,48 @@ requirements:
     date: 2026-03-23
     rationale: >
       Untested ACs represent gaps in test coverage at the
-      requirements level. Surfacing them explicitly allows
-      teams to prioritize test writing and gives CI pipelines
-      a hook for enforcing coverage policy via configurable
-      severity.
+      requirements level. Only ACs belonging to active
+      requirements are meaningful to report — ACs under
+      superseded or deprecated requirements are intentionally
+      retired and flagging them as untested would produce
+      noise that erodes trust in the report. Filtering is
+      applied at query time so superseded requirements remain
+      fully navigable in the graph.
     superseded_by:
     acceptance_criteria:
 
       - id: INDEX-4-1
+        title: Active Untested AC
         description: >
-          Given an AC with no linked test functions,
+          Given an AC belonging to an active requirement
+          with no linked test functions,
           when the index is queried,
           then the AC appears in the untested AC collection.
 
       - id: INDEX-4-2
+        title: Active Tested AC
         description: >
-          Given an AC with one or more linked test functions,
+          Given an AC belonging to an active requirement
+          with one or more linked test functions,
           when the index is queried,
           then the AC does not appear in the untested AC collection.
+
+      - id: INDEX-4-3
+        title: Non-Active Excluded
+        description: >
+          Given an AC belonging to a requirement with any
+          status other than active,
+          when the index is queried,
+          then the AC does not appear in the untested AC collection
+          regardless of whether it has linked test functions.
+
+      - id: INDEX-4-4
+        title: Superseded Still Navigable
+        description: >
+          Given a superseded requirement,
+          when the index is queried,
+          then the requirement and its ACs remain fully
+          navigable in the graph.
 
   - id: INDEX-5
     title: Orphaned Annotation Detection
@@ -177,6 +210,7 @@ requirements:
     acceptance_criteria:
 
       - id: INDEX-5-1
+        title: Unknown ID Orphaned
         description: >
           Given a test annotation referencing an ID that does
           not exist in any parsed req file,
@@ -185,6 +219,7 @@ requirements:
           annotation collection with its file and line number.
 
       - id: INDEX-5-2
+        title: No Orphaned Annotations
         description: >
           Given all test annotations referencing IDs that exist
           in parsed req files,
@@ -212,6 +247,7 @@ requirements:
     acceptance_criteria:
 
       - id: INDEX-6-1
+        title: Query by Feature
         description: >
           Given a valid feature name,
           when the index is queried by feature,
@@ -219,12 +255,14 @@ requirements:
           are returned.
 
       - id: INDEX-6-2
+        title: Query by Requirement ID
         description: >
           Given a valid requirement ID,
           when the index is queried by requirement ID,
           then the requirement and all its ACs are returned.
 
       - id: INDEX-6-3
+        title: Query by AC ID
         description: >
           Given a valid AC ID,
           when the index is queried by AC ID,
@@ -232,12 +270,14 @@ requirements:
           are returned.
 
       - id: INDEX-6-4
+        title: Unknown ID Returns Nil
         description: >
           Given an ID that does not exist in the index,
           when the index is queried,
           then nil and no error is returned.
 
       - id: INDEX-6-5
+        title: All Features
         description: >
           Given a populated index,
           when all features are requested,
