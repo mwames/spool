@@ -2,6 +2,7 @@ package interpreters
 
 import "testing"
 
+// SCANNER-4-3: Jest Test Extraction
 func TestJestInterpreter_Supports(t *testing.T) {
 	j := Jest{}
 	for _, f := range []string{"foo.test.js", "foo.test.ts", "foo.spec.js", "foo.spec.ts"} {
@@ -16,6 +17,7 @@ func TestJestInterpreter_Supports(t *testing.T) {
 	}
 }
 
+// SCANNER-4-3: Jest Test Extraction
 func TestJestInterpreter_ItCall(t *testing.T) {
 	src := []byte(`describe('math', () => {
   it('adds numbers', () => {

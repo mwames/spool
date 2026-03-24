@@ -183,7 +183,8 @@ func (mockFormatter) Format(report *spool.Report) ([]byte, error) {
 	return []byte("mock"), nil
 }
 
-// REPORTER-2-1 + REPORTER-2-2: Interface compliance
+// REPORTER-2-1: Minimal Interface Contract
+// REPORTER-2-2: Third-Party Formatter
 func TestFormatter_MockCompliance(t *testing.T) {
 	var f spool.Formatter = mockFormatter{}
 	r := &spool.Report{TotalRequirements: 1}

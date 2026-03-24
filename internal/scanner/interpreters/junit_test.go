@@ -2,6 +2,7 @@ package interpreters
 
 import "testing"
 
+// SCANNER-4-2: JUnit Test Extraction
 func TestJUnitInterpreter_Supports(t *testing.T) {
 	j := JUnit{}
 	if !j.Supports("FooTest.java") {
@@ -12,6 +13,7 @@ func TestJUnitInterpreter_Supports(t *testing.T) {
 	}
 }
 
+// SCANNER-4-2: JUnit Test Extraction
 func TestJUnitInterpreter_TestAnnotation(t *testing.T) {
 	src := []byte(`import org.junit.jupiter.api.Test;
 

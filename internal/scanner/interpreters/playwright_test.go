@@ -2,6 +2,7 @@ package interpreters
 
 import "testing"
 
+// SCANNER-4-4: Playwright Test Extraction
 func TestPlaywrightInterpreter_Supports(t *testing.T) {
 	p := Playwright{}
 	for _, f := range []string{"login.spec.ts", "login.spec.js"} {
@@ -16,6 +17,7 @@ func TestPlaywrightInterpreter_Supports(t *testing.T) {
 	}
 }
 
+// SCANNER-4-4: Playwright Test Extraction
 func TestPlaywrightInterpreter_TestCall(t *testing.T) {
 	src := []byte(`import { test, expect } from '@playwright/test';
 

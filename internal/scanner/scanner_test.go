@@ -249,7 +249,8 @@ func TestFindInterpreter_FirstMatchWins(t *testing.T) {
 	}
 }
 
-// SCANNER-5-1: Third-Party Interpreter Registered
+// SCANNER-5-1: Third-Party Registration
+// SCANNER-5-2: Minimal Interface Contract
 func TestScan_ThirdPartyInterpreter(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "custom_test.xyz")

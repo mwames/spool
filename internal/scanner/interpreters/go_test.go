@@ -2,6 +2,7 @@ package interpreters
 
 import "testing"
 
+// SCANNER-4-1: Go Test Extraction
 func TestGoInterpreter_Supports(t *testing.T) {
 	g := Go{}
 	if !g.Supports("foo_test.go") {
@@ -15,6 +16,7 @@ func TestGoInterpreter_Supports(t *testing.T) {
 	}
 }
 
+// SCANNER-4-1: Go Test Extraction
 func TestGoInterpreter_BasicTestFunc(t *testing.T) {
 	src := []byte(`package foo
 
