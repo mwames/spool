@@ -36,6 +36,8 @@ func newHandler(srv *Server, conn jsonrpc2.Conn) jsonrpc2.Handler {
 			return handleCodeLens(ctx, srv, reply, req)
 		case "textDocument/hover":
 			return handleHover(ctx, srv, reply, req)
+		case "spool/traceability":
+			return handleTraceability(ctx, srv, reply, req)
 		default:
 			return reply(ctx, nil, jsonrpc2.NewError(jsonrpc2.MethodNotFound, "method not supported"))
 		}
