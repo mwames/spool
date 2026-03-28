@@ -12,7 +12,7 @@ requirements:
       across all features.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -76,7 +76,7 @@ requirements:
       third party formatters to be registered.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -111,7 +111,7 @@ requirements:
       a human readable report suitable for terminal output.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -172,7 +172,7 @@ requirements:
       readable output suitable for CI tooling and piping.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -208,7 +208,7 @@ requirements:
       wiki pages, and project documentation.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -262,7 +262,7 @@ requirements:
       configured destination.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >

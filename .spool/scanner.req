@@ -10,7 +10,7 @@ requirements:
       in test files and record their location.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -62,7 +62,7 @@ requirements:
       appears between the annotation and the function.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -125,7 +125,7 @@ requirements:
       test file.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -172,7 +172,7 @@ requirements:
       mainstream testing frameworks.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -225,7 +225,7 @@ requirements:
       custom interpreters.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -261,7 +261,7 @@ requirements:
       files gracefully without crashing the language server.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >

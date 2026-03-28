@@ -10,7 +10,7 @@ requirements:
       file at the project root.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -60,7 +60,7 @@ requirements:
       and must default to .spool/ relative to the project root.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -98,7 +98,7 @@ requirements:
       identifying which files the scanner should treat as test files.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -141,7 +141,7 @@ requirements:
       to be configured independently.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >

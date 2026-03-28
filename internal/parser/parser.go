@@ -32,6 +32,7 @@ type Requirement struct {
 	Rationale          string               `yaml:"rationale"`
 	SupersededBy       string               `yaml:"superseded_by"`
 	AcceptanceCriteria []AcceptanceCriterion `yaml:"acceptance_criteria"`
+	Line               int                  `yaml:"-"` // 1-based line number in the .req file
 }
 
 // AcceptanceCriterion is a single AC within a requirement.
@@ -39,6 +40,7 @@ type AcceptanceCriterion struct {
 	ID          string `yaml:"id"`
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
+	Line        int    `yaml:"-"` // 1-based line number in the .req file
 }
 
 // FileError records a parse failure for a specific file.
@@ -77,9 +79,66 @@ func ParseFile(path string) (*ReqFile, error) {
 	}
 
 	rf.SourceFile = absPath
+	extractLineNumbers(data, rf)
 	normalizeIDs(rf)
 
 	return rf, nil
+}
+
+// extractLineNumbers uses yaml.Node to populate Line fields on requirements and ACs.
+func extractLineNumbers(data []byte, rf *ReqFile) {
+	var doc yaml.Node
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return
+	}
+	if doc.Kind != yaml.DocumentNode || len(doc.Content) == 0 {
+		return
+	}
+	root := doc.Content[0]
+	if root.Kind != yaml.MappingNode {
+		return
+	}
+
+	// Find the "requirements" key in the root mapping.
+	var reqsSeq *yaml.Node
+	for i := 0; i+1 < len(root.Content); i += 2 {
+		if root.Content[i].Value == "requirements" {
+			reqsSeq = root.Content[i+1]
+			break
+		}
+	}
+	if reqsSeq == nil || reqsSeq.Kind != yaml.SequenceNode {
+		return
+	}
+
+	for i, reqNode := range reqsSeq.Content {
+		if i >= len(rf.Requirements) {
+			break
+		}
+		if reqNode.Kind != yaml.MappingNode {
+			continue
+		}
+		rf.Requirements[i].Line = reqNode.Line
+
+		// Find "acceptance_criteria" within this requirement mapping.
+		for j := 0; j+1 < len(reqNode.Content); j += 2 {
+			if reqNode.Content[j].Value == "acceptance_criteria" {
+				acsSeq := reqNode.Content[j+1]
+				if acsSeq.Kind != yaml.SequenceNode {
+					break
+				}
+				for k, acNode := range acsSeq.Content {
+					if k >= len(rf.Requirements[i].AcceptanceCriteria) {
+						break
+					}
+					if acNode.Kind == yaml.MappingNode {
+						rf.Requirements[i].AcceptanceCriteria[k].Line = acNode.Line
+					}
+				}
+				break
+			}
+		}
+	}
 }
 
 // ParseDir recursively walks dir and parses all .req files.

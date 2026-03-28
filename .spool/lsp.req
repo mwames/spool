@@ -1,0 +1,335 @@
+# .spool/lsp/lsp.req
+
+feature: LSP
+
+requirements:
+  - id: LSP-1
+    title: Go to Definition from Test Annotation
+    description: >
+      The LSP server must support navigating from a Spool ID
+      annotation in a test file to the acceptance criterion
+      definition in the corresponding .req file.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-28
+    rationale: >
+      Bidirectional navigation between tests and requirements
+      is the primary value proposition of the LSP layer. Jumping
+      from a test annotation to the AC definition lets developers
+      quickly understand what a test is verifying.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: LSP-1-1
+        title: Annotation Resolves to AC Definition
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          a known AC,
+          when go-to-definition is invoked on that annotation line,
+          then the LSP returns a location pointing to the AC's
+          line in the .req file.
+
+      - id: LSP-1-2
+        title: Unknown Annotation Returns Empty
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          an unknown AC,
+          when go-to-definition is invoked on that annotation line,
+          then the LSP returns an empty result.
+
+      - id: LSP-1-3
+        title: Non-Annotation Line Returns Empty
+        description: >
+          Given a cursor on a line that is not a Spool ID annotation,
+          when go-to-definition is invoked,
+          then the LSP returns an empty result.
+
+  - id: LSP-2
+    title: Go to Definition from AC to Tests
+    description: >
+      The LSP server must support navigating from an acceptance
+      criterion ID in a .req file to the test function(s)
+      that cover it.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-28
+    rationale: >
+      Navigating from an AC to its covering tests lets developers
+      verify coverage and jump directly to the relevant test code
+      from the requirements specification.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: LSP-2-1
+        title: AC Resolves to Test Locations
+        description: >
+          Given a .req file with an AC that has linked tests,
+          when go-to-definition is invoked on the AC's id line,
+          then the LSP returns locations for all linked test
+          functions.
+
+      - id: LSP-2-2
+        title: Untested AC Returns Empty
+        description: >
+          Given a .req file with an AC that has no linked tests,
+          when go-to-definition is invoked on the AC's id line,
+          then the LSP returns an empty result.
+
+      - id: LSP-2-3
+        title: Non-ID Line Returns Empty
+        description: >
+          Given a cursor on a line in a .req file that does not
+          contain a Spool ID,
+          when go-to-definition is invoked,
+          then the LSP returns an empty result.
+
+  - id: LSP-3
+    title: Server Lifecycle
+    description: >
+      The LSP server must implement the standard LSP lifecycle
+      protocol over stdio JSON-RPC.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-28
+    rationale: >
+      Standard LSP lifecycle compliance ensures compatibility
+      with all major editors (VS Code, Neovim, etc.) without
+      requiring editor-specific adapters.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: LSP-3-1
+        title: Initialize Returns Capabilities
+        description: >
+          Given an initialize request with a rootUri,
+          when the server processes it,
+          then it returns capabilities including
+          definitionProvider set to true.
+
+      - id: LSP-3-2
+        title: Reindex on Save
+        description: >
+          Given a textDocument/didSave notification,
+          when the server processes it,
+          then the traceability index is rebuilt from disk.
+
+  - id: LSP-4
+    title: Document Links
+    description: >
+      The LSP server must provide clickable document links for
+      Spool IDs in both .req files and test files, enabling
+      ctrl+click navigation.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-28
+    rationale: >
+      Document links make Spool IDs visually identifiable as
+      navigable references, providing a more discoverable UX
+      than go-to-definition alone.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: LSP-4-1
+        title: Req File Links to Tests
+        description: >
+          Given a .req file with an AC that has linked tests,
+          when the document is opened,
+          then the AC's ID appears as a clickable link targeting
+          the covering test.
+
+      - id: LSP-4-2
+        title: Untested AC Has No Link
+        description: >
+          Given a .req file with an AC that has no linked tests,
+          when the document is opened,
+          then the AC's ID does not appear as a clickable link.
+
+      - id: LSP-4-3
+        title: Test Annotation Links to AC
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          a known AC,
+          when the document is opened,
+          then the annotation appears as a clickable link targeting
+          the AC definition in the .req file.
+
+      - id: LSP-4-4
+        title: Unknown Annotation Has No Link
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          an unknown AC,
+          when the document is opened,
+          then the annotation does not appear as a clickable link.
+
+      - id: LSP-4-5
+        title: Non-Annotation Lines Have No Links
+        description: >
+          Given a test file where a line is not a Spool ID annotation,
+          when the document is opened,
+          then that line does not produce a document link.
+
+  - id: LSP-5
+    title: Diagnostics
+    description: >
+      The LSP server must publish warning diagnostics for untested
+      acceptance criteria and orphaned test annotations.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-28
+    rationale: >
+      Inline warnings surface coverage gaps directly in the editor
+      without requiring the developer to run the CLI.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: LSP-5-1
+        title: Untested AC Warning
+        description: >
+          Given a .req file with an active AC that has no covering tests,
+          when the index is built,
+          then a warning diagnostic is published on the AC's id line.
+
+      - id: LSP-5-2
+        title: Orphaned Annotation Warning
+        description: >
+          Given a test file with a Spool ID annotation that does not
+          match any known AC,
+          when the index is built,
+          then a warning diagnostic is published on the annotation line.
+
+      - id: LSP-5-3
+        title: Tested AC Has No Warning
+        description: >
+          Given a .req file with an AC that has covering tests,
+          when the index is built,
+          then no diagnostic is published for that AC.
+
+      - id: LSP-5-4
+        title: Clean Index Has No Diagnostics
+        description: >
+          Given a project where all active ACs have tests and all
+          annotations reference known ACs,
+          when the index is built,
+          then no diagnostics are published.
+
+  - id: LSP-6
+    title: Code Lenses
+    description: >
+      The LSP server must provide code lenses showing test coverage
+      counts on ACs in .req files and AC references on test
+      annotations.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-28
+    rationale: >
+      Code lenses make traceability visible at a glance without
+      requiring hover or navigation, showing coverage status
+      inline above each AC and test annotation.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: LSP-6-1
+        title: Tested AC Shows Test Count
+        description: >
+          Given a .req file with an AC that has linked tests,
+          when code lenses are requested,
+          then a lens appears showing the test count with a
+          command to navigate to the tests.
+
+      - id: LSP-6-2
+        title: Untested AC Shows Untested Lens
+        description: >
+          Given a .req file with an AC that has no linked tests,
+          when code lenses are requested,
+          then a lens appears showing "untested".
+
+      - id: LSP-6-3
+        title: Test Annotation Shows AC Reference
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          a known AC,
+          when code lenses are requested,
+          then a lens appears showing the AC title with a command
+          to navigate to the AC definition.
+
+      - id: LSP-6-4
+        title: Unknown Annotation Has No Lens
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          an unknown AC,
+          when code lenses are requested,
+          then no lens is produced for that annotation.
+
+  - id: LSP-7
+    title: Hover Information
+    description: >
+      The LSP server must provide rich hover tooltips for Spool IDs
+      showing AC details and test coverage information.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-03-28
+    rationale: >
+      Hover info gives developers context about an AC or test
+      relationship without navigating away from the current file.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: LSP-7-1
+        title: Test Annotation Hover Shows AC Details
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          a known AC,
+          when hover is invoked on that annotation,
+          then the tooltip shows the AC title, description, and
+          parent requirement.
+
+      - id: LSP-7-2
+        title: Unknown Annotation Returns No Hover
+        description: >
+          Given a test file with a Spool ID annotation referencing
+          an unknown AC,
+          when hover is invoked on that annotation,
+          then no tooltip is shown.
+
+      - id: LSP-7-3
+        title: Non-Annotation Returns No Hover
+        description: >
+          Given a cursor on a non-annotation line in a test file,
+          when hover is invoked,
+          then no tooltip is shown.
+
+      - id: LSP-7-4
+        title: Req File AC Hover Shows Test Coverage
+        description: >
+          Given a .req file with an AC that has linked tests,
+          when hover is invoked on the AC's id line,
+          then the tooltip shows the test function names and files.
+
+      - id: LSP-7-5
+        title: Req File Untested AC Hover
+        description: >
+          Given a .req file with an AC that has no linked tests,
+          when hover is invoked on the AC's id line,
+          then the tooltip shows "No covering tests".
+
+      - id: LSP-7-6
+        title: Req File Non-ID Line Returns No Hover
+        description: >
+          Given a cursor on a line in a .req file that does not
+          contain a Spool ID,
+          when hover is invoked,
+          then no tooltip is shown.

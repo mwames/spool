@@ -26,7 +26,7 @@ requirements:
     description: Users must be able to log in.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: Core feature.
@@ -43,7 +43,7 @@ requirements:
     description: Users must be able to log out.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: Core feature.
@@ -354,5 +354,37 @@ requirements:
 	}
 	if len(rf.Warnings) == 0 {
 		t.Error("expected warnings for malformed ID")
+	}
+}
+
+func TestParseFile_LineNumbers(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "auth.req")
+	writeReqFile(t, path, validReqYAML)
+
+	rf, err := ParseFile(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// validReqYAML starts with \n, so AUTH-1 is at line 5, AUTH-2 at line 22.
+	if rf.Requirements[0].Line != 5 {
+		t.Errorf("Requirements[0].Line = %d, want 5", rf.Requirements[0].Line)
+	}
+	if rf.Requirements[1].Line != 22 {
+		t.Errorf("Requirements[1].Line = %d, want 22", rf.Requirements[1].Line)
+	}
+
+	// AUTH-1-1 at line 16, AUTH-1-2 at line 19.
+	if rf.Requirements[0].AcceptanceCriteria[0].Line != 16 {
+		t.Errorf("AC[0].Line = %d, want 16", rf.Requirements[0].AcceptanceCriteria[0].Line)
+	}
+	if rf.Requirements[0].AcceptanceCriteria[1].Line != 19 {
+		t.Errorf("AC[1].Line = %d, want 19", rf.Requirements[0].AcceptanceCriteria[1].Line)
+	}
+
+	// AUTH-2-1 at line 33.
+	if rf.Requirements[1].AcceptanceCriteria[0].Line != 33 {
+		t.Errorf("AUTH-2-1.Line = %d, want 33", rf.Requirements[1].AcceptanceCriteria[0].Line)
 	}
 }

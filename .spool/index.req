@@ -12,7 +12,7 @@ requirements:
       graph of requirements, ACs, and their linked test functions.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -63,7 +63,7 @@ requirements:
       are unique across the full set of parsed req files.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -105,7 +105,7 @@ requirements:
       feature of that file.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -141,7 +141,7 @@ requirements:
       requirements that have no linked test functions.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -196,7 +196,7 @@ requirements:
       an ID that does not exist in any parsed req file.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
@@ -234,7 +234,7 @@ requirements:
       of the hierarchy.
     status: active
     deciders:
-      - Project Lead
+      - Matt Ames
     consulted: []
     date: 2026-03-23
     rationale: >
