@@ -1,0 +1,272 @@
+# .spool/api/api.req
+
+feature: API
+
+requirements:
+
+  - id: API-1
+    title: Project Loading Contract
+    description: >
+      LoadProject must validate the project path and the
+      presence and validity of .spool.yaml before running
+      the pipeline, returning a categorized *ProjectError
+      for each distinct failure mode.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-05-07
+    rationale: >
+      The api package is the public Go-library entry point
+      to Spool. Library callers — notably spool-mcp — need
+      to branch on the kind of failure to map errors back
+      to their own contracts: a missing config is not the
+      same problem as a malformed config or a non-existent
+      directory. Categorizing failures via *ProjectError
+      kinds keeps that logic on the library side rather
+      than asking every caller to parse error messages.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: API-1-1
+        title: Absolute Path Required
+        description: >
+          Given a relative project path,
+          when LoadProject is invoked,
+          then it returns a *ProjectError with kind
+          invalid_project.
+
+      - id: API-1-2
+        title: Non-Existent Path Rejected
+        description: >
+          Given an absolute path that does not exist on disk,
+          when LoadProject is invoked,
+          then it returns a *ProjectError with kind
+          invalid_project.
+
+      - id: API-1-3
+        title: Missing Config Detected
+        description: >
+          Given a valid project directory with no .spool.yaml,
+          when LoadProject is invoked,
+          then it returns a *ProjectError with kind
+          missing_config.
+
+      - id: API-1-4
+        title: Invalid Config Detected
+        description: >
+          Given a project directory containing a .spool.yaml
+          that cannot be parsed,
+          when LoadProject is invoked,
+          then it returns a *ProjectError with kind
+          invalid_config.
+
+  - id: API-2
+    title: Partial-State Tolerance
+    description: >
+      LoadProject must accept partial project states —
+      missing reqs directory, malformed individual .req
+      files, test files with no matching interpreter — by
+      surfacing them as Warnings rather than failing the
+      whole load.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-05-07
+    rationale: >
+      A freshly initialized Spool project may have a
+      .spool.yaml without any .req files yet. A working
+      project may temporarily contain a malformed .req file
+      mid-edit, or a test file under an unexpected
+      extension. Failing the entire load on any of these
+      would make tools unusable during normal authoring.
+      Tolerating the partial state and reporting it as a
+      warning lets callers decide what to do — and lets
+      spool-mcp answer queries like list_features against
+      a freshly initialized project without erroring.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: API-2-1
+        title: Missing Reqs Directory Loads Empty
+        description: >
+          Given a project with a valid .spool.yaml but no
+          reqs directory on disk,
+          when LoadProject is invoked,
+          then it returns a non-nil Project with no
+          requirements and no features, and no error.
+
+      - id: API-2-2
+        title: Malformed Req File Surfaces As Parse Warning
+        description: >
+          Given a project where one .req file is malformed
+          and others are valid,
+          when LoadProject is invoked,
+          then the returned Project's Warnings includes an
+          entry of kind parse identifying the malformed
+          file, and requirements from the valid files are
+          still present.
+
+      - id: API-2-3
+        title: Unhandled Test File Surfaces As Scan Warning
+        description: >
+          Given a project containing a test file that no
+          interpreter handles,
+          when LoadProject is invoked,
+          then the returned Project's Warnings includes an
+          entry of kind scan identifying the file.
+
+  - id: API-3
+    title: Project Query Surface
+    description: >
+      A loaded Project must expose lookup-by-id, listing,
+      and diagnostic methods that return read-only views
+      derived from the underlying index.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-05-07
+    rationale: >
+      The api package exists to give external Go callers a
+      stable querying surface that does not leak internal
+      types. Each method on Project corresponds to a single
+      observable behavior; exhaustively pinning them in
+      tests prevents accidental contract drift when the
+      underlying index types are refactored.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: API-3-1
+        title: Requirement Lookup Returns Requirement With ACs
+        description: >
+          Given a loaded Project with a requirement whose
+          ACs include linked tests,
+          when Requirement is called with that requirement's
+          id,
+          then a non-nil RequirementView is returned carrying
+          its acceptance criteria with the test references
+          attached to each AC.
+
+      - id: API-3-2
+        title: Requirement Lookup Returns Nil For Non-Requirement ID
+        description: >
+          Given a loaded Project,
+          when Requirement is called with an id that does
+          not match any requirement — including an id that
+          matches an acceptance criterion or no entity at
+          all,
+          then nil is returned.
+
+      - id: API-3-3
+        title: AC Lookup Returns AC With Parent Title
+        description: >
+          Given a loaded Project with an AC whose parent
+          requirement has a non-empty title,
+          when AC is called with that AC's id,
+          then a non-nil AcceptanceCriterionView is returned
+          carrying the parent requirement's id and title
+          along with the AC's linked tests.
+
+      - id: API-3-4
+        title: AC Lookup Returns Nil For Non-AC ID
+        description: >
+          Given a loaded Project,
+          when AC is called with an id that does not match
+          any acceptance criterion — including an id that
+          matches a requirement or no entity at all,
+          then nil is returned.
+
+      - id: API-3-5
+        title: Requirements Lists Sorted Without Inlined ACs
+        description: >
+          Given a loaded Project,
+          when Requirements is called with an empty filter,
+          then it returns one RequirementView per requirement
+          sorted by id, and each entry has an empty
+          AcceptanceCriteria slice.
+
+      - id: API-3-6
+        title: Requirements Applies Feature And Status Filters
+        description: >
+          Given a loaded Project containing requirements in
+          multiple features and with multiple statuses,
+          when Requirements is called with a non-empty
+          Feature or Status filter,
+          then the result contains only requirements
+          matching the filter.
+
+      - id: API-3-7
+        title: Features Lists Sorted With Counts
+        description: >
+          Given a loaded Project with multiple features,
+          when Features is called,
+          then it returns one FeatureView per feature
+          sorted alphabetically by name, each carrying its
+          requirement count and AC count.
+
+      - id: API-3-8
+        title: Validation Errors Surface Index Errors
+        description: >
+          Given a loaded Project whose index detected a
+          duplicate requirement id, a duplicate AC id, or
+          a feature/prefix mismatch,
+          when ValidationErrors is called,
+          then each detected error appears as a
+          ValidationError with a non-empty Message.
+
+  - id: API-4
+    title: Report Formatting
+    description: >
+      FormatReport must dispatch to the JSON, text, or
+      markdown formatter based on the requested format
+      name and reject unknown names with a clear error.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-05-07
+    rationale: >
+      Three concrete formatters already exist in
+      internal/reporter; FormatReport is the public
+      selector callers use to pick one without importing
+      internal packages. Pinning the format names and the
+      unknown-name error message protects callers that
+      branch on either.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: API-4-1
+        title: JSON Format
+        description: >
+          Given a Report,
+          when FormatReport is called with format "json",
+          then it returns the same bytes as the JSON
+          formatter applied directly to that Report.
+
+      - id: API-4-2
+        title: Text Format
+        description: >
+          Given a Report,
+          when FormatReport is called with format "text",
+          then it returns the same bytes as the text
+          formatter applied directly to that Report.
+
+      - id: API-4-3
+        title: Markdown Format
+        description: >
+          Given a Report,
+          when FormatReport is called with format
+          "markdown",
+          then it returns the same bytes as the markdown
+          formatter applied directly to that Report.
+
+      - id: API-4-4
+        title: Unknown Format Rejected
+        description: >
+          Given a Report,
+          when FormatReport is called with a format other
+          than json, text, or markdown,
+          then it returns a non-nil error whose message
+          identifies the accepted format names.
