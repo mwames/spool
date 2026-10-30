@@ -184,7 +184,7 @@ requirements:
       Spool must match test_patterns and exclude_patterns against
       each path relative to the project root, with ** matching
       any number of directories.
-    status: draft
+    status: active
     deciders:
       - Matt Ames
     consulted: []
@@ -236,7 +236,7 @@ requirements:
     description: >
       Spool must allow glob patterns to be configured identifying
       directories and files the scanner should never read.
-    status: draft
+    status: active
     deciders:
       - Matt Ames
     consulted: []

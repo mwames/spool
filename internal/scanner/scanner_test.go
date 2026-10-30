@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	spool "github.com/mwames/Spool"
+	"github.com/mwames/Spool/internal/scanner/interpreters"
 )
 
 // --- detectAnnotations tests ---
@@ -273,6 +274,34 @@ func TestScan_ThirdPartyInterpreter(t *testing.T) {
 	}
 	if result.Files[0].Mappings[0].Function.Name != "customTest" {
 		t.Errorf("Function = %q, want %q", result.Files[0].Mappings[0].Function.Name, "customTest")
+	}
+}
+
+// SCANNER-7-8: Annotation Above Attribute Block
+func TestScan_RustAnnotationAboveAttributes(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "lib.rs")
+	src := "#[cfg(test)]\nmod tests {\n" +
+		"    // AUTH-1-1\n    // AUTH-1-2\n" +
+		"    #[tokio::test]\n    #[serial]\n    async fn logs_in() {}\n}\n"
+	os.WriteFile(path, []byte(src), 0644)
+
+	result := Scan([]string{path}, []spool.Interpreter{interpreters.Rust{}})
+	if len(result.Errors) != 0 {
+		t.Fatalf("unexpected errors: %v", result.Errors)
+	}
+	if len(result.Files) != 1 || len(result.Files[0].Mappings) != 1 {
+		t.Fatalf("got %+v, want one file with one mapping", result.Files)
+	}
+	m := result.Files[0].Mappings[0]
+	if m.Function.Name != "logs_in" {
+		t.Errorf("Function = %q, want %q", m.Function.Name, "logs_in")
+	}
+	if len(m.Annotations) != 2 || m.Annotations[0].ID != "AUTH-1-1" || m.Annotations[1].ID != "AUTH-1-2" {
+		t.Errorf("Annotations = %v, want AUTH-1-1 and AUTH-1-2", m.Annotations)
+	}
+	if len(result.Files[0].Orphaned) != 0 {
+		t.Errorf("Orphaned = %v, want none", result.Files[0].Orphaned)
 	}
 }
 

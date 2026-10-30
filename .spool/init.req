@@ -7,7 +7,7 @@ requirements:
       Running spool init in a project directory must set the project
       up for Spool: a .spool.yaml, a .spool/ directory with an example
       requirement, and a SPOOL.md guide.
-    status: draft
+    status: active
     deciders:
       - Matt Ames
     consulted: []
@@ -71,7 +71,7 @@ requirements:
       spool init must detect each kind of project present in the
       directory and write test_patterns and exclude_patterns
       suited to all of them.
-    status: draft
+    status: active
     deciders:
       - Matt Ames
     consulted: []

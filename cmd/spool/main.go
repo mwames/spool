@@ -10,6 +10,7 @@ import (
 	"github.com/mwames/Spool/internal/parser"
 	"github.com/mwames/Spool/internal/project"
 	"github.com/mwames/Spool/internal/reporter"
+	"github.com/mwames/Spool/internal/scaffold"
 	"github.com/mwames/Spool/internal/scanner"
 )
 
@@ -23,6 +24,14 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
+	}
+
+	if len(os.Args) > 1 && os.Args[1] == "init" {
+		if err := scaffold.Init(root, os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		return
 	}
 
 	// Load config.
@@ -43,7 +52,7 @@ func main() {
 	}
 
 	// Find test files.
-	testFiles, err := project.FindTestFiles(root, cfg.TestPatterns)
+	testFiles, err := project.FindTestFiles(root, cfg.TestPatterns, cfg.ExcludePatterns)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error finding test files: %v\n", err)
 		os.Exit(1)
