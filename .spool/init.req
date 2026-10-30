@@ -109,7 +109,7 @@ requirements:
         description: >
           Given a directory containing package.json,
           when spool init is run,
-          then test_patterns includes **/*.{test,spec}.{ts,tsx,js,jsx}
+          then test_patterns includes **/*.test.* and **/*.spec.*
           and exclude_patterns includes **/node_modules and **/dist.
 
       - id: INIT-2-4
