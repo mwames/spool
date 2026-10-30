@@ -287,3 +287,89 @@ requirements:
           when the file is scanned,
           then an error is recorded for that file and
           scanning continues for all remaining files.
+  - id: SCANNER-7
+    title: Rust Interpreter
+    description: >
+      Spool must ship a compiled-in interpreter that extracts
+      test functions from Rust source files.
+    status: draft
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-10-30
+    rationale: >
+      Rust tests are marked by attributes rather than by naming
+      convention or call syntax, and the attribute varies by
+      framework (#[test], #[tokio::test], #[rstest], and others).
+      Treating any function preceded by an attribute block as a
+      test keeps the interpreter framework agnostic. Rust tests
+      usually live in an inline mod tests block in the same file
+      as production code, so the interpreter supports every .rs
+      file and the project's test_patterns decide which files are
+      scanned. Association follows SCANNER-2: an annotation
+      attaches to the next extracted test function. A non-test
+      function with an attribute, such as #[allow(dead_code)],
+      is therefore also extracted. Tests generated inside macro
+      invocations such as proptest! and attributes spanning more
+      than one line are not supported.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-7-1
+        title: Rust Test Extraction
+        description: >
+          Given a .rs file containing a function declaration
+          directly preceded by an attribute line such as #[test],
+          when test functions are extracted,
+          then the function is returned with its name and the
+          line number of its fn declaration.
+
+      - id: SCANNER-7-2
+        title: Any Attribute Marks A Test
+        description: >
+          Given a .rs file containing functions preceded by
+          #[tokio::test], #[rstest], or another attribute,
+          when test functions are extracted,
+          then each function is returned regardless of which
+          attribute precedes it.
+
+      - id: SCANNER-7-3
+        title: Multiple Attributes
+        description: >
+          Given a .rs file containing a function preceded by
+          several consecutive attribute lines,
+          when test functions are extracted,
+          then the function is returned exactly once.
+
+      - id: SCANNER-7-4
+        title: Function Qualifiers
+        description: >
+          Given a .rs file containing attributed functions declared
+          with pub, async, or both,
+          when test functions are extracted,
+          then each function is returned with its bare name.
+
+      - id: SCANNER-7-5
+        title: Nested Module Tests
+        description: >
+          Given a .rs file containing attributed functions inside
+          an indented mod tests block,
+          when test functions are extracted,
+          then those functions are returned with their names
+          and line numbers.
+
+      - id: SCANNER-7-6
+        title: Unattributed Functions Ignored
+        description: >
+          Given a .rs file containing functions with no attribute
+          line directly above them,
+          when test functions are extracted,
+          then those functions are not returned.
+
+      - id: SCANNER-7-7
+        title: Annotation Above Attribute Block
+        description: >
+          Given one or more stacked Spool ID annotations directly
+          above the attribute block of a Rust test function,
+          when the file is scanned,
+          then every annotation is associated with that function.
