@@ -3,6 +3,7 @@ package project
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -17,11 +18,14 @@ func DefaultInterpreters() []spool.Interpreter {
 		interpreters.Go{},
 		interpreters.JUnit{},
 		interpreters.Jest{},
+		interpreters.Rust{},
 	}
 }
 
-// FindTestFiles walks root and returns paths matching any of the given glob patterns.
-func FindTestFiles(root string, patterns []string) ([]string, error) {
+// FindTestFiles walks root and returns paths matching any of the given glob
+// patterns. Directories and files matching an exclude pattern are skipped, as
+// is .git.
+func FindTestFiles(root string, patterns, excludes []string) ([]string, error) {
 	if len(patterns) == 0 {
 		return nil, nil
 	}
@@ -31,37 +35,54 @@ func FindTestFiles(root string, patterns []string) ([]string, error) {
 		if err != nil {
 			return nil
 		}
+		rel, _ := filepath.Rel(root, path)
 		if d.IsDir() {
-			name := d.Name()
-			if name == ".git" || name == "node_modules" || name == "vendor" {
+			if d.Name() == ".git" || (rel != "." && matchAny(rel, excludes)) {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		rel, _ := filepath.Rel(root, path)
-		for _, pattern := range patterns {
-			if MatchPattern(rel, pattern) {
-				files = append(files, path)
-				break
-			}
+		if matchAny(rel, patterns) && !matchAny(rel, excludes) {
+			files = append(files, path)
 		}
 		return nil
 	})
 	return files, err
 }
 
-// MatchPattern matches a file path against a glob pattern.
-// Supports ** as a recursive directory wildcard.
-func MatchPattern(path, pattern string) bool {
-	if strings.Contains(pattern, "**") {
-		parts := strings.SplitN(pattern, "**", 2)
-		suffix := strings.TrimPrefix(parts[1], "/")
-		if suffix == "" {
+func matchAny(path string, patterns []string) bool {
+	for _, pattern := range patterns {
+		if MatchPattern(path, pattern) {
 			return true
 		}
-		matched, _ := filepath.Match(suffix, filepath.Base(path))
-		return matched
 	}
-	matched, _ := filepath.Match(pattern, path)
-	return matched
+	return false
+}
+
+// MatchPattern matches a path relative to the project root against a glob
+// pattern. Each path segment is matched with path.Match, and a ** segment
+// matches any number of directories, including none.
+func MatchPattern(relPath, pattern string) bool {
+	return matchSegments(strings.Split(filepath.ToSlash(relPath), "/"), strings.Split(pattern, "/"))
+}
+
+func matchSegments(segs, pats []string) bool {
+	if len(pats) == 0 {
+		return len(segs) == 0
+	}
+	if pats[0] == "**" {
+		for i := 0; i <= len(segs); i++ {
+			if matchSegments(segs[i:], pats[1:]) {
+				return true
+			}
+		}
+		return false
+	}
+	if len(segs) == 0 {
+		return false
+	}
+	if ok, _ := path.Match(pats[0], segs[0]); !ok {
+		return false
+	}
+	return matchSegments(segs[1:], pats[1:])
 }

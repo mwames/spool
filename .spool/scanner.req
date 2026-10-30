@@ -292,7 +292,7 @@ requirements:
     description: >
       Spool must ship a compiled-in interpreter that extracts
       test functions from Rust source files.
-    status: draft
+    status: active
     deciders:
       - Matt Ames
     consulted: []

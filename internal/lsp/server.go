@@ -47,7 +47,7 @@ func (s *Server) reindex(ctx context.Context) error {
 		return fmt.Errorf("parser: %w", err)
 	}
 
-	testFiles, err := project.FindTestFiles(s.projectRoot, cfg.TestPatterns)
+	testFiles, err := project.FindTestFiles(s.projectRoot, cfg.TestPatterns, cfg.ExcludePatterns)
 	if err != nil {
 		return fmt.Errorf("find test files: %w", err)
 	}

@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -251,4 +252,62 @@ func searchString(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+// CONFIG-6-1: Configured Exclude Patterns
+func TestLoad_ExcludePatterns(t *testing.T) {
+	dir := t.TempDir()
+	writeConfig(t, dir, "exclude_patterns:\n  - target\n  - \"**/dist\"\n")
+
+	cfg, err := Load(dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := []string{"target", "**/dist"}
+	if len(cfg.ExcludePatterns) != len(want) || cfg.ExcludePatterns[0] != want[0] || cfg.ExcludePatterns[1] != want[1] {
+		t.Errorf("ExcludePatterns = %v, want %v", cfg.ExcludePatterns, want)
+	}
+}
+
+// CONFIG-6-1: Configured Exclude Patterns
+func TestLoad_EmptyExcludePatternsReplacesDefaults(t *testing.T) {
+	dir := t.TempDir()
+	writeConfig(t, dir, "exclude_patterns: []\n")
+
+	cfg, err := Load(dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cfg.ExcludePatterns) != 0 {
+		t.Errorf("ExcludePatterns = %v, want empty", cfg.ExcludePatterns)
+	}
+}
+
+// CONFIG-6-2: Default Exclude Patterns
+func TestLoad_DefaultExcludePatterns(t *testing.T) {
+	dir := t.TempDir()
+	writeConfig(t, dir, "reqs_dir: reqs\n")
+
+	cfg, err := Load(dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := []string{"**/node_modules", "**/vendor"}
+	if len(cfg.ExcludePatterns) != len(want) || cfg.ExcludePatterns[0] != want[0] || cfg.ExcludePatterns[1] != want[1] {
+		t.Errorf("ExcludePatterns = %v, want %v", cfg.ExcludePatterns, want)
+	}
+}
+
+// CONFIG-6-3: Invalid Exclude Glob Error
+func TestLoad_InvalidExcludeGlob(t *testing.T) {
+	dir := t.TempDir()
+	writeConfig(t, dir, "exclude_patterns:\n  - \"[invalid\"\n")
+
+	_, err := Load(dir)
+	if err == nil {
+		t.Fatal("expected error for invalid glob")
+	}
+	if !strings.Contains(err.Error(), "exclude_patterns") || !strings.Contains(err.Error(), "[invalid") {
+		t.Errorf("error = %q, want it to name exclude_patterns and the pattern", err)
+	}
 }
