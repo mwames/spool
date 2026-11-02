@@ -295,3 +295,57 @@ requirements:
           that cannot be written to,
           when the report is written,
           then a descriptive error is returned.
+  - id: REPORTER-7
+    title: Exit Status
+    description: >
+      The CLI must exit non-zero after printing the report when
+      any finding has a configured severity of error.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-02
+    rationale: >
+      CONFIG-4 exists so that, for example, untested ACs can be
+      errors that fail CI, but the CLI previously exited zero
+      whatever the report contained, so severity had no effect.
+      Mapping error severity to the exit status lets a pipeline
+      gate on coverage without parsing output. Only untested_ac
+      and orphaned_annotation map to findings in the report;
+      missing_ac has no corresponding finding and does not affect
+      the exit status.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: REPORTER-7-1
+        title: Untested Error Fails
+        description: >
+          Given untested_ac set to error and a report with at least
+          one untested AC,
+          when the CLI runs,
+          then the report is printed and it exits non-zero.
+
+      - id: REPORTER-7-2
+        title: Orphaned Error Fails
+        description: >
+          Given orphaned_annotation set to error and a report with
+          at least one orphaned annotation,
+          when the CLI runs,
+          then the report is printed and it exits non-zero.
+
+      - id: REPORTER-7-3
+        title: Lower Severities Pass
+        description: >
+          Given untested_ac and orphaned_annotation set to warning,
+          info, or off and a report with untested ACs and orphaned
+          annotations,
+          when the CLI runs,
+          then it exits zero.
+
+      - id: REPORTER-7-4
+        title: Clean Report Passes
+        description: >
+          Given both severities set to error and a report with no
+          untested ACs and no orphaned annotations,
+          when the CLI runs,
+          then it exits zero.
