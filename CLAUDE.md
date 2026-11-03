@@ -11,6 +11,7 @@ Spool is a requirements traceability tool written in Go. It links structured req
 ```bash
 go build ./...                          # Build all packages
 go run ./cmd/spool                      # Run the CLI (from a project with .spool.yaml)
+go run ./cmd/spool init                 # Scaffold .spool.yaml, .spool/ and SPOOL.md in the cwd
 go test ./...                           # Run all tests
 go test ./internal/parser               # Run tests for a single package
 go test ./internal/parser -run TestName # Run a single test
@@ -24,7 +25,7 @@ The pipeline runs as a linear chain in `cmd/spool/main.go`:
 
 **config** → **parser** → **scanner** → **index** → **reporter**
 
-1. **config** (`internal/config/`) — Loads `.spool.yaml` from the project root. Defaults: reqs dir is `.spool/`, severity levels are warning/error/info.
+1. **config** (`internal/config/`) — Loads `.spool.yaml` from the project root. Defaults: reqs dir is `.spool/`, severity levels are warning/error/info, `exclude_patterns` is `**/node_modules` and `**/vendor`. Test files are found by `project.FindTestFiles`, which matches `test_patterns`/`exclude_patterns` per path segment (`**` spans directories).
 2. **parser** (`internal/parser/`) — Walks the reqs directory and parses `.req` files (YAML). Normalizes all Spool IDs via the `spoolid` package.
 3. **scanner** (`internal/scanner/`) — Reads test files matched by glob patterns, detects Spool ID annotations in comments (`//` or `#` prefixed), extracts test functions via **interpreters**, and associates annotations with the test function that follows them.
 4. **index** (`internal/index/`) — Builds a traceability graph joining requirements/ACs to test annotations. Detects duplicates, prefix mismatches, untested ACs, and orphaned annotations.
@@ -34,7 +35,7 @@ The pipeline runs as a linear chain in `cmd/spool/main.go`:
 
 - Core interfaces and report types live in the **root package** (`spool.go`): `Interpreter`, `TestFunction`, `Formatter`, `Report`.
 - **Spool IDs** (`internal/spoolid/`) follow the pattern `PREFIX-N` (requirement) or `PREFIX-N-N` (acceptance criterion). The prefix must match the feature name. IDs are normalized to uppercase with no leading zeros.
-- **Interpreters** (`internal/scanner/interpreters/`) implement the `spool.Interpreter` interface for different test frameworks: Go, JUnit, Jest, Playwright. Each detects whether it supports a file and extracts test function names/lines.
+- **Interpreters** (`internal/scanner/interpreters/`) implement the `spool.Interpreter` interface for different test frameworks: Go, JUnit, Jest, Playwright, Rust. Each detects whether it supports a file and extracts test function names/lines.
 
 ### Req file format
 
@@ -48,6 +49,8 @@ Tests link to ACs by placing a comment with the AC's Spool ID above the test fun
 // CONFIG-1-1
 func TestValidConfigParsing(t *testing.T) { ... }
 ```
+
+`spool init` (`internal/scaffold/`) sits outside this chain: it detects project types from manifest files, writes `.spool.yaml`, and copies the embedded templates in `internal/scaffold/templates/`. Editor extensions call it rather than scaffolding themselves.
 
 ## Self-hosting
 

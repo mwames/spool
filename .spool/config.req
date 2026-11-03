@@ -178,3 +178,124 @@ requirements:
           when config is loaded,
           then a descriptive error is returned identifying
           the invalid value.
+  - id: CONFIG-5
+    title: Glob Pattern Matching
+    description: >
+      Spool must match test_patterns and exclude_patterns against
+      each path relative to the project root, with ** matching
+      any number of directories.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-10-30
+    rationale: >
+      The original matcher discarded everything before a **, so
+      tests/**/*.rs matched every .rs file in the project and a
+      pattern could not be limited to a directory tree. Matching
+      the whole relative path, segment by segment, makes the
+      prefix meaningful while keeping existing patterns such as
+      **/*_test.go working unchanged.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: CONFIG-5-1
+        title: Plain Pattern Matches Whole Path
+        description: >
+          Given the pattern tests/*.rs,
+          when paths are matched,
+          then tests/a.rs matches and tests/sub/a.rs and
+          src/a.rs do not.
+
+      - id: CONFIG-5-2
+        title: Prefix Before Double Star Respected
+        description: >
+          Given the pattern tests/**/*.rs,
+          when paths are matched,
+          then tests/a.rs and tests/sub/deep/a.rs match
+          and src/a.rs and src/tests/a.rs do not.
+
+      - id: CONFIG-5-3
+        title: Leading Double Star Matches Any Depth
+        description: >
+          Given the pattern **/*_test.go,
+          when paths are matched,
+          then a_test.go and pkg/sub/a_test.go match
+          and pkg/a.go does not.
+
+      - id: CONFIG-5-4
+        title: Multiple Double Stars
+        description: >
+          Given the pattern **/tests/**/*.rs,
+          when paths are matched,
+          then tests/a.rs and crates/x/tests/sub/a.rs match
+          and crates/x/src/a.rs does not.
+
+  - id: CONFIG-6
+    title: Exclude Pattern Configuration
+    description: >
+      Spool must allow glob patterns to be configured identifying
+      directories and files the scanner should never read.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-10-30
+    rationale: >
+      Build output and dependency directories (target, dist,
+      node_modules, vendor) differ by language, so a hard-coded
+      skip list grows with every language Spool supports.
+      exclude_patterns moves that list into the project. The
+      defaults reproduce the previously hard-coded skips so
+      existing projects are unaffected, and setting the key
+      replaces the defaults so a project controls the full list.
+      .git is always skipped because it is never source.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: CONFIG-6-1
+        title: Configured Exclude Patterns
+        description: >
+          Given a .spool.yaml with an exclude_patterns list,
+          when config is loaded,
+          then the ExcludePatterns field reflects exactly the
+          configured patterns.
+
+      - id: CONFIG-6-2
+        title: Default Exclude Patterns
+        description: >
+          Given a .spool.yaml with no exclude_patterns value,
+          when config is loaded,
+          then the ExcludePatterns field is **/node_modules
+          and **/vendor and no error is produced.
+
+      - id: CONFIG-6-3
+        title: Invalid Exclude Glob Error
+        description: >
+          Given an exclude_patterns list containing an invalid glob,
+          when config is loaded,
+          then a descriptive error is returned identifying
+          the invalid pattern.
+
+      - id: CONFIG-6-4
+        title: Excluded Directory Not Walked
+        description: >
+          Given exclude_patterns containing target and a target
+          directory holding files that match test_patterns,
+          when test files are discovered,
+          then no file under target is returned.
+
+      - id: CONFIG-6-5
+        title: Excluded File Not Scanned
+        description: >
+          Given a file that matches both test_patterns and
+          exclude_patterns,
+          when test files are discovered,
+          then the file is not returned.
+
+      - id: CONFIG-6-6
+        title: Git Directory Always Skipped
+        description: >
+          Given exclude_patterns that do not mention .git,
+          when test files are discovered,
+          then no file under .git is returned.

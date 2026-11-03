@@ -203,7 +203,7 @@ func LoadProject(projectRoot string) (*Project, error) {
 		warnings = append(warnings, Warning{Kind: WarningParse, Message: e.Error()})
 	}
 
-	testFiles, err := project.FindTestFiles(projectRoot, cfg.TestPatterns)
+	testFiles, err := project.FindTestFiles(projectRoot, cfg.TestPatterns, cfg.ExcludePatterns)
 	if err != nil {
 		return nil, &ProjectError{
 			Kind:    ErrInvalidConfig,

@@ -28,11 +28,15 @@ type SeverityConfig struct {
 	MissingAC          Severity `yaml:"missing_ac"`
 }
 
+// DefaultExcludePatterns apply when .spool.yaml sets no exclude_patterns.
+var DefaultExcludePatterns = []string{"**/node_modules", "**/vendor"}
+
 // Config is the parsed representation of .spool.yaml.
 type Config struct {
-	ReqsDir      string         `yaml:"reqs_dir"`
-	TestPatterns []string       `yaml:"test_patterns"`
-	Severity     SeverityConfig `yaml:"severity"`
+	ReqsDir         string         `yaml:"reqs_dir"`
+	TestPatterns    []string       `yaml:"test_patterns"`
+	ExcludePatterns []string       `yaml:"exclude_patterns"`
+	Severity        SeverityConfig `yaml:"severity"`
 }
 
 // Load reads .spool.yaml from projectRoot and returns the parsed Config.
@@ -70,6 +74,11 @@ func applyDefaults(cfg *Config, projectRoot string) {
 		cfg.ReqsDir = filepath.Join(projectRoot, cfg.ReqsDir)
 	}
 
+	// An explicit list, even an empty one, replaces the defaults.
+	if cfg.ExcludePatterns == nil {
+		cfg.ExcludePatterns = append([]string(nil), DefaultExcludePatterns...)
+	}
+
 	if cfg.Severity.UntestedAC == "" {
 		cfg.Severity.UntestedAC = SeverityWarning
 	}
@@ -85,6 +94,11 @@ func validate(cfg *Config) error {
 	for _, p := range cfg.TestPatterns {
 		if _, err := filepath.Match(p, ""); err != nil {
 			return fmt.Errorf("test_patterns: invalid glob %q: %w", p, err)
+		}
+	}
+	for _, p := range cfg.ExcludePatterns {
+		if _, err := filepath.Match(p, ""); err != nil {
+			return fmt.Errorf("exclude_patterns: invalid glob %q: %w", p, err)
 		}
 	}
 

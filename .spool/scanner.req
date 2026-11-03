@@ -286,4 +286,103 @@ requirements:
           Given a test file that cannot be parsed by its interpreter,
           when the file is scanned,
           then an error is recorded for that file and
-          scanning continues for all remaining files.
+
+  - id: SCANNER-7
+    title: Rust Interpreter
+    description: >
+      Spool must ship a compiled-in interpreter that extracts
+      test functions from Rust source files.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-10-30
+    rationale: >
+      Rust tests are marked by attributes rather than by naming
+      convention or call syntax, and the attribute varies by
+      framework. A function is a test when its attribute block
+      contains a test marker: an attribute whose path, or the
+      last segment of its path, ends in "test" (#[test],
+      #[tokio::test], #[rstest], #[wasm_bindgen_test]), plus
+      #[test_case]. The suffix rule covers new async runtimes and
+      frameworks without code changes, while ordinary attributes
+      such as #[cfg(test)], #[allow(...)] and #[inline] never make
+      a helper look like a test. Rust unit tests usually live in
+      an inline mod tests block alongside production code, so the
+      interpreter supports every .rs file; test_patterns and
+      exclude_patterns decide which files are scanned. Association
+      follows SCANNER-2: an annotation attaches to the next
+      extracted test function. Tests generated inside macro
+      invocations such as proptest! and attributes spanning more
+      than one line are not supported.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: SCANNER-7-1
+        title: Rust Test Extraction
+        description: >
+          Given a .rs file containing a function declaration
+          directly preceded by #[test],
+          when test functions are extracted,
+          then the function is returned with its name and the
+          line number of its fn declaration.
+
+      - id: SCANNER-7-2
+        title: Test Marker Attributes
+        description: >
+          Given a .rs file containing functions preceded by
+          #[tokio::test], #[tokio::test(flavor = "multi_thread")],
+          #[rstest], #[wasm_bindgen_test], or #[test_case(...)],
+          when test functions are extracted,
+          then each function is returned.
+
+      - id: SCANNER-7-3
+        title: Non-Marker Attributes Ignored
+        description: >
+          Given a .rs file containing functions preceded only by
+          attributes that are not test markers, such as
+          #[cfg(test)], #[allow(dead_code)], or #[inline],
+          when test functions are extracted,
+          then those functions are not returned.
+
+      - id: SCANNER-7-4
+        title: Multiple Attributes
+        description: >
+          Given a .rs file containing a function preceded by
+          several consecutive attribute lines, at least one of
+          which is a test marker in any position,
+          when test functions are extracted,
+          then the function is returned exactly once.
+
+      - id: SCANNER-7-5
+        title: Function Qualifiers
+        description: >
+          Given a .rs file containing test functions declared
+          with pub, async, or both,
+          when test functions are extracted,
+          then each function is returned with its bare name.
+
+      - id: SCANNER-7-6
+        title: Nested Module Tests
+        description: >
+          Given a .rs file containing test functions inside
+          an indented mod tests block,
+          when test functions are extracted,
+          then those functions are returned with their names
+          and line numbers.
+
+      - id: SCANNER-7-7
+        title: Unattributed Functions Ignored
+        description: >
+          Given a .rs file containing functions with no attribute
+          line directly above them,
+          when test functions are extracted,
+          then those functions are not returned.
+
+      - id: SCANNER-7-8
+        title: Annotation Above Attribute Block
+        description: >
+          Given one or more stacked Spool ID annotations directly
+          above the attribute block of a Rust test function,
+          when the file is scanned,
+          then every annotation is associated with that function.

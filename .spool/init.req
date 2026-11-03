@@ -1,0 +1,157 @@
+feature: INIT
+
+requirements:
+  - id: INIT-1
+    title: Project Scaffolding
+    description: >
+      Running spool init in a project directory must set the project
+      up for Spool: a .spool.yaml, a .spool/ directory with an example
+      requirement, and a SPOOL.md guide.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-10-30
+    rationale: >
+      Scaffolding previously lived only in the VS Code extension, in
+      untested TypeScript that CLI users could not reach. Moving it
+      into the binary makes it available everywhere, testable, and
+      traced by Spool itself; editor extensions become thin wrappers
+      that call it. Init never overwrites an existing file, because
+      a project may already have requirements or its own SPOOL.md
+      before it has a .spool.yaml.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INIT-1-1
+        title: Fresh Init
+        description: >
+          Given a directory with no .spool.yaml, .spool/ directory,
+          or SPOOL.md,
+          when spool init is run in it,
+          then .spool.yaml, .spool/example.req, and SPOOL.md are
+          created, each created path is printed, and it exits zero.
+
+      - id: INIT-1-2
+        title: Already Initialized
+        description: >
+          Given a directory that already has a .spool.yaml,
+          when spool init is run in it,
+          then it reports that the project is already initialized,
+          changes nothing, and exits non-zero.
+
+      - id: INIT-1-3
+        title: Existing Files Preserved
+        description: >
+          Given a directory with no .spool.yaml but an existing
+          SPOOL.md or .spool/ directory containing .req files,
+          when spool init is run in it,
+          then .spool.yaml is created, existing files are left
+          unchanged, no example.req is added beside existing .req
+          files, each skipped path is printed, and it exits zero.
+
+      - id: INIT-1-4
+        title: Generated Config Loads
+        description: >
+          Given a .spool.yaml written by spool init,
+          when config is loaded,
+          then no error is produced and its test_patterns and
+          exclude_patterns equal what init detected.
+
+      - id: INIT-1-5
+        title: Generated Example Parses
+        description: >
+          Given a .spool/example.req written by spool init,
+          when the reqs directory is parsed,
+          then it parses without error.
+
+  - id: INIT-2
+    title: Project Type Detection
+    description: >
+      spool init must detect each kind of project present in the
+      directory and write test_patterns and exclude_patterns
+      suited to all of them.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-10-30
+    rationale: >
+      Build output and dependency directories differ by language,
+      and a project may mix languages. Detecting every project type
+      from its manifest file and combining their patterns gives a
+      working config on the first run, written out in full so the
+      user can see and edit everything Spool will skip. Detection
+      looks at any depth to find monorepo members, but never inside
+      dependency or build directories, where manifests belong to
+      third-party code.
+    superseded_by:
+    acceptance_criteria:
+
+      - id: INIT-2-1
+        title: Go Project
+        description: >
+          Given a directory containing go.mod,
+          when spool init is run,
+          then test_patterns includes **/*_test.go and
+          exclude_patterns includes **/vendor.
+
+      - id: INIT-2-2
+        title: Rust Project
+        description: >
+          Given a directory containing Cargo.toml,
+          when spool init is run,
+          then test_patterns includes **/*.rs and
+          exclude_patterns includes **/target.
+
+      - id: INIT-2-3
+        title: JavaScript Project
+        description: >
+          Given a directory containing package.json,
+          when spool init is run,
+          then test_patterns includes **/*.test.* and **/*.spec.*
+          and exclude_patterns includes **/node_modules and **/dist.
+
+      - id: INIT-2-4
+        title: Java Project
+        description: >
+          Given a directory containing pom.xml, build.gradle,
+          or build.gradle.kts,
+          when spool init is run,
+          then test_patterns includes **/src/test/**/*.java and
+          exclude_patterns includes **/target and **/build.
+
+      - id: INIT-2-5
+        title: Mixed Project
+        description: >
+          Given a directory containing manifests for more than one
+          project type,
+          when spool init is run,
+          then test_patterns and exclude_patterns contain the
+          patterns of every detected type, each pattern once,
+          in a stable order.
+
+      - id: INIT-2-6
+        title: Nested Manifest Detected
+        description: >
+          Given a manifest only in a subdirectory, such as
+          crates/core/Cargo.toml,
+          when spool init is run,
+          then that project type is detected.
+
+      - id: INIT-2-7
+        title: Dependency Manifests Ignored
+        description: >
+          Given a manifest only inside a node_modules, vendor,
+          target, dist, build, or .git directory,
+          when spool init is run,
+          then that project type is not detected.
+
+      - id: INIT-2-8
+        title: Unknown Project
+        description: >
+          Given a directory with no recognized manifest,
+          when spool init is run,
+          then .spool.yaml is written with empty test_patterns,
+          a message says no project type was detected and that
+          test_patterns must be edited, and it exits zero.
