@@ -82,4 +82,5 @@ func main() {
 		os.Exit(1)
 	}
 	reporter.Write(data, "")
+	os.Exit(reporter.ExitCode(report, cfg.Severity))
 }
