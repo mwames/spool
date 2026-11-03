@@ -30,8 +30,8 @@ func TestLoad_MissingFile(t *testing.T) {
 	if len(cfg.TestPatterns) != 0 {
 		t.Errorf("TestPatterns = %v, want empty", cfg.TestPatterns)
 	}
-	if cfg.Severity.UntestedAC != SeverityWarning {
-		t.Errorf("UntestedAC = %q, want %q", cfg.Severity.UntestedAC, SeverityWarning)
+	if cfg.Severity.UntestedAC != SeverityError {
+		t.Errorf("UntestedAC = %q, want %q", cfg.Severity.UntestedAC, SeverityError)
 	}
 	if cfg.Severity.OrphanedAnnotation != SeverityError {
 		t.Errorf("OrphanedAnnotation = %q, want %q", cfg.Severity.OrphanedAnnotation, SeverityError)
@@ -206,6 +206,24 @@ severity:
 	}
 	if cfg.Severity.MissingAC != SeverityInfo {
 		t.Errorf("MissingAC = %q, want %q", cfg.Severity.MissingAC, SeverityInfo)
+	}
+}
+
+// CONFIG-4-2: Default Severity Values
+func TestLoad_SeverityDefaults(t *testing.T) {
+	dir := t.TempDir()
+	writeConfig(t, dir, `
+test_patterns:
+  - "**/*_test.go"
+`)
+
+	cfg, err := Load(dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := SeverityConfig{UntestedAC: SeverityError, OrphanedAnnotation: SeverityError, MissingAC: SeverityInfo}
+	if cfg.Severity != want {
+		t.Errorf("Severity = %+v, want %+v", cfg.Severity, want)
 	}
 }
 
