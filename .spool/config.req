@@ -143,14 +143,15 @@ requirements:
     deciders:
       - Matt Ames
     consulted: []
-    date: 2026-03-23
+    date: 2026-11-03
     rationale: >
       Different institutions have different tolerances for
-      diagnostic severity. A regulated industry may require
-      untested ACs to be errors that fail CI, while a startup
-      may prefer them as informational. Configurable severity
-      ensures Spool is useful across both contexts without
-      imposing opinions.
+      diagnostic severity, so each class stays configurable.
+      The defaults, though, state Spool's position: an untested
+      AC is a failure, because tracing every AC to a test is the
+      point of the tool. A project that tolerates untested ACs
+      must say so in its .spool.yaml. Until 2026-11-03 the
+      default for untested_ac was warning.
     superseded_by:
     acceptance_criteria:
 
@@ -167,7 +168,7 @@ requirements:
           Given a .spool.yaml with no severity values configured,
           when config is loaded,
           then the following defaults are applied:
-          untested_ac as warning, orphaned_annotation as error,
+          untested_ac as error, orphaned_annotation as error,
           and missing_ac as info.
 
       - id: CONFIG-4-3
