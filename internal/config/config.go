@@ -80,7 +80,7 @@ func applyDefaults(cfg *Config, projectRoot string) {
 	}
 
 	if cfg.Severity.UntestedAC == "" {
-		cfg.Severity.UntestedAC = SeverityWarning
+		cfg.Severity.UntestedAC = SeverityError
 	}
 	if cfg.Severity.OrphanedAnnotation == "" {
 		cfg.Severity.OrphanedAnnotation = SeverityError

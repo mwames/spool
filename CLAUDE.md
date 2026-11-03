@@ -25,7 +25,7 @@ The pipeline runs as a linear chain in `cmd/spool/main.go`:
 
 **config** → **parser** → **scanner** → **index** → **reporter**
 
-1. **config** (`internal/config/`) — Loads `.spool.yaml` from the project root. Defaults: reqs dir is `.spool/`, severity levels are warning/error/info, `exclude_patterns` is `**/node_modules` and `**/vendor`. Test files are found by `project.FindTestFiles`, which matches `test_patterns`/`exclude_patterns` per path segment (`**` spans directories).
+1. **config** (`internal/config/`) — Loads `.spool.yaml` from the project root. Defaults: reqs dir is `.spool/`, severity levels are error for untested ACs and orphaned annotations, info for missing ACs, `exclude_patterns` is `**/node_modules` and `**/vendor`. Test files are found by `project.FindTestFiles`, which matches `test_patterns`/`exclude_patterns` per path segment (`**` spans directories).
 2. **parser** (`internal/parser/`) — Walks the reqs directory and parses `.req` files (YAML). Normalizes all Spool IDs via the `spoolid` package.
 3. **scanner** (`internal/scanner/`) — Reads test files matched by glob patterns, detects Spool ID annotations in comments (`//` or `#` prefixed), extracts test functions via **interpreters**, and associates annotations with the test function that follows them.
 4. **index** (`internal/index/`) — Builds a traceability graph joining requirements/ACs to test annotations. Detects duplicates, prefix mismatches, untested ACs, and orphaned annotations.
