@@ -1,0 +1,127 @@
+# .spool/invariant.req
+
+feature: INVARIANT
+
+requirements:
+
+  - id: INVARIANT-1
+    title: Invariants Tracked Like ACs
+    description: >
+      A requirement may list invariants alongside its acceptance
+      criteria. Spool parses, indexes and links them to annotated
+      tests the way it does ACs, and reports an untested invariant
+      as a finding with its own configurable severity, error by
+      default.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-05
+    rationale: >
+      An invariant is a property that must hold across every run of
+      a requirement, successful or not, so it needs a test as much
+      as any AC does. Until now Spool ignored the invariants list,
+      so a missing invariant test went unnoticed: in the first agent
+      run (SLICE-7) nothing would have caught one. The ID format
+      <REQ>-<n>-INV-<n>, for example SLICE-6-INV-1, was chosen
+      over <REQ>-<n>-I<n> because it stands out when scanning a file.
+      Like untested_ac, untested_invariant defaults to error, because
+      tracing every item to a test is the point of the tool.
+    superseded_by:
+    out_of_scope:
+      - Editor support for invariants (LSP diagnostics, hover, navigation,
+        code lens and the traceability view)
+      - Checking that an AC or invariant ID belongs to the requirement
+        it's listed under
+      - Per-item status on invariants or ACs
+      - Command-line flags and output formats (`spool check` stays text)
+      - Migrating existing specs and markers to the new format
+    acceptance_criteria:
+
+      - id: INVARIANT-1-1
+        title: Invariant ID Format
+        description: >
+          Given an ID of the form <REQ>-<n>-INV-<n>,
+          when it is validated and normalized,
+          then it is valid, and normalizing it upper-cases the
+          prefix and INV and strips leading zeros from the numbers
+          ("slice-06-inv-01" becomes "SLICE-6-INV-1"), while
+          "SLICE-6-INV", "SLICE-INV-1", "SLICE-6-I1" and
+          "SLICE-6-INV-1-1" are malformed.
+
+      - id: INVARIANT-1-2
+        title: Invariants Parsed
+        description: >
+          Given a requirement with an invariants list whose items
+          have an id, a title and a description,
+          when the .req file is parsed,
+          then each invariant is read with its normalized ID and its
+          1-based line number, alongside the requirement's ACs, and
+          a malformed invariant ID produces a parse warning naming
+          the ID, as a malformed AC ID does.
+
+      - id: INVARIANT-1-3
+        title: Invariant Annotations
+        description: >
+          Given a test function annotated with an invariant's ID in
+          any supported comment style, with or without text after a
+          colon,
+          when the tests are scanned and the index is built,
+          then the invariant is linked to that test function, and an
+          annotation naming an invariant ID that no .req file
+          defines is reported as orphaned.
+
+      - id: INVARIANT-1-4
+        title: Duplicate Invariant ID
+        description: >
+          Given two invariants with the same ID, in the same .req
+          file or different ones,
+          when the index is built,
+          then an index error names the duplicated ID and both
+          source files, as a duplicate AC ID does.
+
+      - id: INVARIANT-1-5
+        title: Untested Invariants Reported
+        description: >
+          Given an active requirement with an invariant that no test
+          annotates,
+          when the text report is generated,
+          then it lists the invariant's ID and description under its
+          own "Untested Invariants" heading, counts invariants,
+          linked invariants and untested invariants per feature and
+          in the totals, separately from ACs, and says "Full
+          traceability" only when there are no untested ACs, no
+          untested invariants and no orphaned annotations.
+          Invariants of requirements that aren't active are neither
+          counted nor listed.
+
+      - id: INVARIANT-1-6
+        title: Untested Invariant Severity
+        description: >
+          Given severity.untested_invariant in .spool.yaml,
+          when config is loaded and spool check runs on a project
+          with an untested invariant,
+          then it defaults to error when not set, error makes spool
+          check exit 1, warning, info and off leave the exit code to
+          the other findings, and a value other than error, warning,
+          info or off is a config error naming the value, as for the
+          other severities.
+
+      - id: INVARIANT-1-7
+        title: JSON and Markdown Reports
+        description: >
+          Given a report with invariants,
+          when it is formatted as JSON or Markdown,
+          then the output carries the same invariant counts per
+          feature and in the totals, and the list of untested
+          invariants with each one's ID, description and feature,
+          and every existing JSON field keeps its name and value.
+
+      - id: INVARIANT-1-8
+        title: Invariants Documented
+        description: >
+          Given spool init writes SPOOL.md,
+          when it is read,
+          then it describes the invariants list in a .req file, the
+          <REQ>-<n>-INV-<n> ID format with an example, and how to
+          annotate a test with an invariant's ID.
