@@ -32,11 +32,21 @@ type IndexedReq struct {
 	Feature    string
 	SourceFile string
 	ACs        []*IndexedAC
+	Invariants []*IndexedInvariant
 }
 
 // IndexedAC is an acceptance criterion enriched with linked tests.
 type IndexedAC struct {
 	parser.AcceptanceCriterion
+	ReqID      string
+	Feature    string
+	SourceFile string
+	Tests      []LinkedTest
+}
+
+// IndexedInvariant is an invariant enriched with linked tests (INVARIANT-1).
+type IndexedInvariant struct {
+	parser.Invariant
 	ReqID      string
 	Feature    string
 	SourceFile string
@@ -110,9 +120,9 @@ func Build(reqFiles []*parser.ReqFile, scanResults []scanner.FileResult) *Index 
 
 				ia := &IndexedAC{
 					AcceptanceCriterion: a,
-					ReqID:              r.ID,
-					Feature:            rf.Feature,
-					SourceFile:         rf.SourceFile,
+					ReqID:               r.ID,
+					Feature:             rf.Feature,
+					SourceFile:          rf.SourceFile,
 				}
 				idx.acs[a.ID] = ia
 				ir.ACs = append(ir.ACs, ia)
@@ -169,6 +179,18 @@ func (idx *Index) Requirement(id string) *IndexedReq {
 // AC returns the acceptance criterion with the given ID, or nil.
 func (idx *Index) AC(id string) *IndexedAC {
 	return idx.acs[id]
+}
+
+// Invariant returns the invariant with the given ID, or nil.
+func (idx *Index) Invariant(id string) *IndexedInvariant {
+	_ = id
+	return nil // INVARIANT-1-3: not yet indexed
+}
+
+// UntestedInvariants returns all invariants belonging to active requirements
+// with no linked tests.
+func (idx *Index) UntestedInvariants() []*IndexedInvariant {
+	return nil // INVARIANT-1-5: not yet indexed
 }
 
 // UntestedACs returns all ACs belonging to active requirements with no linked tests.

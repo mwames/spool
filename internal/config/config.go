@@ -26,6 +26,8 @@ type SeverityConfig struct {
 	UntestedAC         Severity `yaml:"untested_ac"`
 	OrphanedAnnotation Severity `yaml:"orphaned_annotation"`
 	MissingAC          Severity `yaml:"missing_ac"`
+	// UntestedInvariant is the severity of an untested invariant (INVARIANT-1-6).
+	UntestedInvariant Severity `yaml:"untested_invariant"`
 }
 
 // DefaultExcludePatterns apply when .spool.yaml sets no exclude_patterns.

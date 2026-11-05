@@ -23,6 +23,12 @@ type Report struct {
 	Features          []FeatureReport
 	Untested          []UntestedAC
 	Orphaned          []OrphanedRef
+
+	// Invariants are counted and listed separately from ACs (INVARIANT-1).
+	TotalInvariants       int
+	LinkedInvariants      int
+	UntestedInvariants    int
+	UntestedInvariantList []UntestedInvariant
 }
 
 // FeatureReport captures per-feature traceability totals.
@@ -33,10 +39,20 @@ type FeatureReport struct {
 	LinkedACs            int
 	UntestedACs          int
 	ExcludedRequirements int
+	Invariants           int
+	LinkedInvariants     int
+	UntestedInvariants   int
 }
 
 // UntestedAC identifies an acceptance criterion with no linked tests.
 type UntestedAC struct {
+	ID          string
+	Description string
+	Feature     string
+}
+
+// UntestedInvariant identifies an invariant with no linked tests.
+type UntestedInvariant struct {
 	ID          string
 	Description string
 	Feature     string

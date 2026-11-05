@@ -18,6 +18,11 @@ type jsonReport struct {
 	Features          []jsonFeatureReport `json:"features"`
 	Untested          []jsonUntestedAC    `json:"untested"`
 	Orphaned          []jsonOrphanedRef   `json:"orphaned"`
+
+	TotalInvariants       int                     `json:"totalInvariants"`
+	LinkedInvariants      int                     `json:"linkedInvariants"`
+	UntestedInvariants    int                     `json:"untestedInvariants"`
+	UntestedInvariantList []jsonUntestedInvariant `json:"untestedInvariantList"`
 }
 
 type jsonFeatureReport struct {
@@ -27,9 +32,18 @@ type jsonFeatureReport struct {
 	LinkedACs            int    `json:"linkedACs"`
 	UntestedACs          int    `json:"untestedACs"`
 	ExcludedRequirements int    `json:"excludedRequirements"`
+	Invariants           int    `json:"invariants"`
+	LinkedInvariants     int    `json:"linkedInvariants"`
+	UntestedInvariants   int    `json:"untestedInvariants"`
 }
 
 type jsonUntestedAC struct {
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	Feature     string `json:"feature"`
+}
+
+type jsonUntestedInvariant struct {
 	ID          string `json:"id"`
 	Description string `json:"description"`
 	Feature     string `json:"feature"`

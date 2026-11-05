@@ -22,21 +22,31 @@ type ReqFile struct {
 
 // Requirement is a single requirement within a .req file.
 type Requirement struct {
-	ID                 string               `yaml:"id"`
-	Title              string               `yaml:"title"`
-	Description        string               `yaml:"description"`
-	Status             string               `yaml:"status"`
-	Deciders           []string             `yaml:"deciders"`
-	Consulted          []string             `yaml:"consulted"`
-	Date               string               `yaml:"date"`
-	Rationale          string               `yaml:"rationale"`
-	SupersededBy       string               `yaml:"superseded_by"`
+	ID                 string                `yaml:"id"`
+	Title              string                `yaml:"title"`
+	Description        string                `yaml:"description"`
+	Status             string                `yaml:"status"`
+	Deciders           []string              `yaml:"deciders"`
+	Consulted          []string              `yaml:"consulted"`
+	Date               string                `yaml:"date"`
+	Rationale          string                `yaml:"rationale"`
+	SupersededBy       string                `yaml:"superseded_by"`
 	AcceptanceCriteria []AcceptanceCriterion `yaml:"acceptance_criteria"`
-	Line               int                  `yaml:"-"` // 1-based line number in the .req file
+	Invariants         []Invariant           `yaml:"invariants"`
+	Line               int                   `yaml:"-"` // 1-based line number in the .req file
 }
 
 // AcceptanceCriterion is a single AC within a requirement.
 type AcceptanceCriterion struct {
+	ID          string `yaml:"id"`
+	Title       string `yaml:"title"`
+	Description string `yaml:"description"`
+	Line        int    `yaml:"-"` // 1-based line number in the .req file
+}
+
+// Invariant is a property a requirement must keep on every run, with an ID of
+// the form <REQ>-<n>-INV-<n> (INVARIANT-1).
+type Invariant struct {
 	ID          string `yaml:"id"`
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
@@ -58,7 +68,6 @@ type ParseResult struct {
 	Files  []*ReqFile
 	Errors []FileError
 }
-
 
 // ParseFile parses a single .req file. Returns an error for fatal issues
 // (unreadable file, invalid YAML). Malformed IDs produce warnings on ReqFile.
