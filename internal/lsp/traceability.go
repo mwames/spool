@@ -61,13 +61,12 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 		}
 		for _, r := range f.Requirements {
 			tr := TraceabilityRequirement{
-				ID:     r.ID,
-				Title:  r.Title,
-				Status: r.Status,
-				File:   r.SourceFile,
-				Line:   r.Line,
-				ACs:    make([]TraceabilityAC, 0, len(r.ACs)),
-
+				ID:         r.ID,
+				Title:      r.Title,
+				Status:     r.Status,
+				File:       r.SourceFile,
+				Line:       r.Line,
+				ACs:        make([]TraceabilityAC, 0, len(r.ACs)),
 				Invariants: make([]TraceabilityInvariant, 0, len(r.Invariants)),
 			}
 			for _, ac := range r.ACs {

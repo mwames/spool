@@ -134,17 +134,17 @@ func collectTestCodeLenses(idx *index.Index, filePath string, lines []string) []
 		}
 		normalized, _ := spoolid.NormalizeID(candidate)
 
-		var id, acTitle, srcFile string
+		var id, defTitle, srcFile string
 		var defLine int
 		if ac := idx.AC(normalized); ac != nil {
-			id, acTitle, srcFile, defLine = ac.ID, ac.Title, ac.SourceFile, ac.Line
+			id, defTitle, srcFile, defLine = ac.ID, ac.Title, ac.SourceFile, ac.Line
 		} else if iv := idx.Invariant(normalized); iv != nil {
-			id, acTitle, srcFile, defLine = iv.ID, iv.Title, iv.SourceFile, iv.Line
+			id, defTitle, srcFile, defLine = iv.ID, iv.Title, iv.SourceFile, iv.Line
 		} else {
 			continue
 		}
 
-		title := fmt.Sprintf("covers: %s (%s)", acTitle, id)
+		title := fmt.Sprintf("covers: %s (%s)", defTitle, id)
 		lenses = append(lenses, protocol.CodeLens{
 			Range: protocol.Range{
 				Start: protocol.Position{Line: uint32(i)},
