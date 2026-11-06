@@ -210,6 +210,7 @@ severity:
 }
 
 // CONFIG-4-2: Default Severity Values
+// INVARIANT-1-6: Untested Invariant Severity
 func TestLoad_SeverityDefaults(t *testing.T) {
 	dir := t.TempDir()
 	writeConfig(t, dir, `
@@ -221,7 +222,7 @@ test_patterns:
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := SeverityConfig{UntestedAC: SeverityError, OrphanedAnnotation: SeverityError, MissingAC: SeverityInfo}
+	want := SeverityConfig{UntestedAC: SeverityError, OrphanedAnnotation: SeverityError, MissingAC: SeverityInfo, UntestedInvariant: SeverityError}
 	if cfg.Severity != want {
 		t.Errorf("Severity = %+v, want %+v", cfg.Severity, want)
 	}
