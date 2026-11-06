@@ -125,3 +125,109 @@ requirements:
           then it describes the invariants list in a .req file, the
           <REQ>-<n>-INV-<n> ID format with an example, and how to
           annotate a test with an invariant's ID.
+
+  - id: INVARIANT-2
+    title: Editor Support for Invariants
+    description: >
+      The LSP server gives invariants the editor support it gives
+      ACs: navigation both ways between an invariant and its tests,
+      document links, diagnostics, code lenses, hover, and a place
+      in the traceability tree.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-06
+    rationale: >
+      INVARIANT-1 made Spool track invariants but left the editor out,
+      so in VS Code an invariant ID is inert text: no jump to its
+      tests, no warning when it has none, and no entry in the
+      traceability view. Moving between a spec and the tests that
+      cover it is the main reason to use the LSP, and an invariant
+      needs that as much as an AC. Requirement IDs summarize their
+      ACs today, so they summarize their invariants too.
+    superseded_by:
+    out_of_scope:
+      - The VS Code extension's tree view; it follows in spool-vscode
+      - Applying the configured severities to diagnostics, which ACs
+        don't do either
+      - New LSP capabilities or custom requests
+    acceptance_criteria:
+
+      - id: INVARIANT-2-1
+        title: Go to Definition for Invariants
+        description: >
+          Given a test annotated with a known invariant's ID, and that
+          invariant's id line in a .req file,
+          when go-to-definition is invoked on the annotation line,
+          then the LSP returns the invariant's line in the .req file;
+          and when it is invoked on the invariant's id line, it
+          returns the locations of all linked test functions, or an
+          empty result when the invariant has no tests.
+
+      - id: INVARIANT-2-2
+        title: Document Links for Invariants
+        description: >
+          Given a .req file with invariants and a test file annotated
+          with a known invariant's ID,
+          when the documents are opened,
+          then a tested invariant's ID is a link to a covering test,
+          an untested invariant's ID is not a link, and the
+          annotation is a link to the invariant's definition.
+
+      - id: INVARIANT-2-3
+        title: Diagnostics for Invariants
+        description: >
+          Given an active requirement with an invariant that has no
+          covering tests, and another that has,
+          when the index is built,
+          then a warning diagnostic naming the untested invariant's
+          title and ID is published on its id line, none is
+          published for the tested one, and an annotation naming an
+          invariant ID that no .req file defines gets the orphaned
+          annotation warning.
+
+      - id: INVARIANT-2-4
+        title: Code Lenses for Invariants
+        description: >
+          Given a .req file with invariants and a test file annotated
+          with a known invariant's ID,
+          when code lenses are requested,
+          then a tested invariant shows its test count with a command
+          to navigate to the tests, an untested one shows "untested",
+          and the annotation shows the invariant's title with a
+          command to navigate to its definition.
+
+      - id: INVARIANT-2-5
+        title: Hover for Invariants
+        description: >
+          Given a test annotated with a known invariant's ID, and that
+          invariant's id line in a .req file,
+          when hover is invoked on the annotation,
+          then the tooltip shows the invariant's title, description
+          and parent requirement; and when it is invoked on the
+          invariant's id line, the tooltip shows the linked test
+          function names and files, or "No covering tests".
+
+      - id: INVARIANT-2-6
+        title: Requirement Summaries Include Invariants
+        description: >
+          Given a requirement whose invariants have tests,
+          when hover, go-to-definition or document links are used on
+          the requirement's id line,
+          then the hover lists each invariant with its test count or
+          "untested" after the ACs, go-to-definition returns the
+          invariants' tests after the ACs' tests, and the document
+          link, which already targets the first AC test, targets an
+          invariant's first test when no AC has one.
+
+      - id: INVARIANT-2-7
+        title: Invariants in the Traceability Tree
+        description: >
+          Given a requirement with invariants,
+          when the spool/traceability request is handled,
+          then the requirement carries an "invariants" list in
+          definition order, each entry with its id, title, file, line
+          and testCount as an AC entry has, the list is empty rather
+          than missing when there are none, and the "acs" list is
+          unchanged.

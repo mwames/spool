@@ -20,16 +20,26 @@ type TraceabilityFeature struct {
 
 // TraceabilityRequirement represents a requirement in the tree.
 type TraceabilityRequirement struct {
-	ID     string           `json:"id"`
-	Title  string           `json:"title"`
-	Status string           `json:"status"`
-	File   string           `json:"file"`
-	Line   int              `json:"line"`
-	ACs    []TraceabilityAC `json:"acs"`
+	ID         string                  `json:"id"`
+	Title      string                  `json:"title"`
+	Status     string                  `json:"status"`
+	File       string                  `json:"file"`
+	Line       int                     `json:"line"`
+	ACs        []TraceabilityAC        `json:"acs"`
+	Invariants []TraceabilityInvariant `json:"invariants"`
 }
 
 // TraceabilityAC represents an acceptance criterion in the tree.
 type TraceabilityAC struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	File      string `json:"file"`
+	Line      int    `json:"line"`
+	TestCount int    `json:"testCount"`
+}
+
+// TraceabilityInvariant represents an invariant in the tree.
+type TraceabilityInvariant struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
 	File      string `json:"file"`
@@ -51,12 +61,13 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 		}
 		for _, r := range f.Requirements {
 			tr := TraceabilityRequirement{
-				ID:     r.ID,
-				Title:  r.Title,
-				Status: r.Status,
-				File:   r.SourceFile,
-				Line:   r.Line,
-				ACs:    make([]TraceabilityAC, 0, len(r.ACs)),
+				ID:         r.ID,
+				Title:      r.Title,
+				Status:     r.Status,
+				File:       r.SourceFile,
+				Line:       r.Line,
+				ACs:        make([]TraceabilityAC, 0, len(r.ACs)),
+				Invariants: make([]TraceabilityInvariant, 0, len(r.Invariants)),
 			}
 			for _, ac := range r.ACs {
 				tr.ACs = append(tr.ACs, TraceabilityAC{
@@ -65,6 +76,15 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 					File:      ac.SourceFile,
 					Line:      ac.Line,
 					TestCount: len(ac.Tests),
+				})
+			}
+			for _, iv := range r.Invariants {
+				tr.Invariants = append(tr.Invariants, TraceabilityInvariant{
+					ID:        iv.ID,
+					Title:     iv.Title,
+					File:      iv.SourceFile,
+					Line:      iv.Line,
+					TestCount: len(iv.Tests),
 				})
 			}
 			tf.Requirements = append(tf.Requirements, tr)

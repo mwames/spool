@@ -42,6 +42,18 @@ func resolveFromTest(idx *index.Index, filePath string, line int) []protocol.Loc
 		return nil
 	}
 
+	if iv := idx.Invariant(id); iv != nil {
+		return []protocol.Location{
+			{
+				URI: uri.File(iv.SourceFile),
+				Range: protocol.Range{
+					Start: protocol.Position{Line: uint32(iv.Line - 1)},
+					End:   protocol.Position{Line: uint32(iv.Line - 1)},
+				},
+			},
+		}
+	}
+
 	ac := idx.AC(id)
 	if ac == nil {
 		return nil
@@ -91,19 +103,26 @@ func resolveFromReq(idx *index.Index, filePath string, line int) []protocol.Loca
 		return locs
 	}
 
-	// Also try as a requirement ID — navigate to its ACs' tests.
+	if iv := idx.Invariant(id); iv != nil {
+		var locs []protocol.Location
+		for _, t := range iv.Tests {
+			locs = append(locs, testLocation(t))
+		}
+		return locs
+	}
+
+	// Also try as a requirement ID — navigate to its ACs' tests, then its invariants' tests.
 	req := idx.Requirement(id)
 	if req != nil {
 		var locs []protocol.Location
 		for _, iac := range req.ACs {
 			for _, t := range iac.Tests {
-				locs = append(locs, protocol.Location{
-					URI: uri.File(t.File),
-					Range: protocol.Range{
-						Start: protocol.Position{Line: uint32(t.Function.Line - 1)},
-						End:   protocol.Position{Line: uint32(t.Function.Line - 1)},
-					},
-				})
+				locs = append(locs, testLocation(t))
+			}
+		}
+		for _, iv := range req.Invariants {
+			for _, t := range iv.Tests {
+				locs = append(locs, testLocation(t))
 			}
 		}
 		if len(locs) > 0 {
@@ -112,6 +131,17 @@ func resolveFromReq(idx *index.Index, filePath string, line int) []protocol.Loca
 	}
 
 	return nil
+}
+
+// testLocation returns the location of a linked test function.
+func testLocation(t index.LinkedTest) protocol.Location {
+	return protocol.Location{
+		URI: uri.File(t.File),
+		Range: protocol.Range{
+			Start: protocol.Position{Line: uint32(t.Function.Line - 1)},
+			End:   protocol.Position{Line: uint32(t.Function.Line - 1)},
+		},
+	}
 }
 
 // collectLinks returns document links for all Spool IDs in the given file.
@@ -153,19 +183,34 @@ func collectReqLinks(idx *index.Index, lines []string) []protocol.DocumentLink {
 		var target string
 		var tooltip string
 
-		if ac := idx.AC(normalized); ac != nil && len(ac.Tests) > 0 {
-			t := ac.Tests[0]
-			target = string(uri.File(t.File)) + "#" + fmt.Sprintf("%d", t.Function.Line)
-			tooltip = "Go to test: " + t.Function.Name
+		var first *index.LinkedTest
+		if ac := idx.AC(normalized); ac != nil {
+			if len(ac.Tests) > 0 {
+				first = &ac.Tests[0]
+			}
+		} else if iv := idx.Invariant(normalized); iv != nil {
+			if len(iv.Tests) > 0 {
+				first = &iv.Tests[0]
+			}
 		} else if req := idx.Requirement(normalized); req != nil {
 			for _, iac := range req.ACs {
 				if len(iac.Tests) > 0 {
-					t := iac.Tests[0]
-					target = string(uri.File(t.File)) + "#" + fmt.Sprintf("%d", t.Function.Line)
-					tooltip = "Go to test: " + t.Function.Name
+					first = &iac.Tests[0]
 					break
 				}
 			}
+			if first == nil {
+				for _, iv := range req.Invariants {
+					if len(iv.Tests) > 0 {
+						first = &iv.Tests[0]
+						break
+					}
+				}
+			}
+		}
+		if first != nil {
+			target = string(uri.File(first.File)) + "#" + fmt.Sprintf("%d", first.Function.Line)
+			tooltip = "Go to test: " + first.Function.Name
 		}
 
 		if target == "" {
@@ -177,7 +222,7 @@ func collectReqLinks(idx *index.Index, lines []string) []protocol.DocumentLink {
 				Start: protocol.Position{Line: uint32(i), Character: uint32(idStart)},
 				End:   protocol.Position{Line: uint32(i), Character: uint32(idEnd)},
 			},
-			Target: protocol.DocumentURI(target),
+			Target:  protocol.DocumentURI(target),
 			Tooltip: tooltip,
 		})
 	}
@@ -214,8 +259,12 @@ func collectTestLinks(idx *index.Index, lines []string) []protocol.DocumentLink 
 		}
 		normalized, _ := spoolid.NormalizeID(candidate)
 
-		ac := idx.AC(normalized)
-		if ac == nil {
+		var defFile, title string
+		if ac := idx.AC(normalized); ac != nil {
+			defFile, title = ac.SourceFile, ac.Title
+		} else if iv := idx.Invariant(normalized); iv != nil {
+			defFile, title = iv.SourceFile, iv.Title
+		} else {
 			continue
 		}
 
@@ -228,8 +277,8 @@ func collectTestLinks(idx *index.Index, lines []string) []protocol.DocumentLink 
 				Start: protocol.Position{Line: uint32(i), Character: uint32(idStart)},
 				End:   protocol.Position{Line: uint32(i), Character: uint32(idEnd)},
 			},
-			Target: uri.File(ac.SourceFile),
-			Tooltip: ac.Title,
+			Target:  uri.File(defFile),
+			Tooltip: title,
 		})
 	}
 	return links
