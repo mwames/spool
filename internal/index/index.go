@@ -16,6 +16,7 @@ type Index struct {
 	features     map[string]*Feature
 	requirements map[string]*IndexedReq
 	acs          map[string]*IndexedAC
+	invariants   map[string]*IndexedInvariant
 	errors       []Error
 	orphaned     []OrphanedAnnotation
 }
@@ -32,11 +33,21 @@ type IndexedReq struct {
 	Feature    string
 	SourceFile string
 	ACs        []*IndexedAC
+	Invariants []*IndexedInvariant
 }
 
 // IndexedAC is an acceptance criterion enriched with linked tests.
 type IndexedAC struct {
 	parser.AcceptanceCriterion
+	ReqID      string
+	Feature    string
+	SourceFile string
+	Tests      []LinkedTest
+}
+
+// IndexedInvariant is an invariant enriched with linked tests (INVARIANT-1).
+type IndexedInvariant struct {
+	parser.Invariant
 	ReqID      string
 	Feature    string
 	SourceFile string
@@ -67,6 +78,7 @@ func Build(reqFiles []*parser.ReqFile, scanResults []scanner.FileResult) *Index 
 		features:     make(map[string]*Feature),
 		requirements: make(map[string]*IndexedReq),
 		acs:          make(map[string]*IndexedAC),
+		invariants:   make(map[string]*IndexedInvariant),
 	}
 
 	// Phase 1: Populate from req files.
@@ -110,12 +122,30 @@ func Build(reqFiles []*parser.ReqFile, scanResults []scanner.FileResult) *Index 
 
 				ia := &IndexedAC{
 					AcceptanceCriterion: a,
-					ReqID:              r.ID,
-					Feature:            rf.Feature,
-					SourceFile:         rf.SourceFile,
+					ReqID:               r.ID,
+					Feature:             rf.Feature,
+					SourceFile:          rf.SourceFile,
 				}
 				idx.acs[a.ID] = ia
 				ir.ACs = append(ir.ACs, ia)
+			}
+
+			for _, v := range r.Invariants {
+				if existing, dup := idx.invariants[v.ID]; dup {
+					idx.errors = append(idx.errors, Error{
+						Message: fmt.Sprintf("duplicate invariant ID %s in %s and %s", v.ID, existing.SourceFile, rf.SourceFile),
+					})
+					continue
+				}
+
+				iv := &IndexedInvariant{
+					Invariant:  v,
+					ReqID:      r.ID,
+					Feature:    rf.Feature,
+					SourceFile: rf.SourceFile,
+				}
+				idx.invariants[v.ID] = iv
+				ir.Invariants = append(ir.Invariants, iv)
 			}
 
 			idx.requirements[r.ID] = ir
@@ -129,6 +159,11 @@ func Build(reqFiles []*parser.ReqFile, scanResults []scanner.FileResult) *Index 
 			for _, ann := range m.Annotations {
 				if ia, ok := idx.acs[ann.ID]; ok {
 					ia.Tests = append(ia.Tests, LinkedTest{
+						Function: m.Function,
+						File:     fr.Path,
+					})
+				} else if iv, ok := idx.invariants[ann.ID]; ok {
+					iv.Tests = append(iv.Tests, LinkedTest{
 						Function: m.Function,
 						File:     fr.Path,
 					})
@@ -169,6 +204,28 @@ func (idx *Index) Requirement(id string) *IndexedReq {
 // AC returns the acceptance criterion with the given ID, or nil.
 func (idx *Index) AC(id string) *IndexedAC {
 	return idx.acs[id]
+}
+
+// Invariant returns the invariant with the given ID, or nil.
+func (idx *Index) Invariant(id string) *IndexedInvariant {
+	return idx.invariants[id]
+}
+
+// UntestedInvariants returns all invariants belonging to active requirements
+// with no linked tests.
+func (idx *Index) UntestedInvariants() []*IndexedInvariant {
+	var out []*IndexedInvariant
+	for _, ir := range idx.requirements {
+		if ir.Status != "active" {
+			continue
+		}
+		for _, iv := range ir.Invariants {
+			if len(iv.Tests) == 0 {
+				out = append(out, iv)
+			}
+		}
+	}
+	return out
 }
 
 // UntestedACs returns all ACs belonging to active requirements with no linked tests.

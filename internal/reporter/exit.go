@@ -14,5 +14,8 @@ func ExitCode(r *spool.Report, sev config.SeverityConfig) int {
 	if r.OrphanedCount > 0 && sev.OrphanedAnnotation == config.SeverityError {
 		return 1
 	}
+	if r.UntestedInvariants > 0 && sev.UntestedInvariant == config.SeverityError {
+		return 1
+	}
 	return 0
 }

@@ -31,8 +31,19 @@ func Generate(idx *index.Index) *spool.Report {
 					fr.UntestedACs++
 				}
 			}
+			for _, iv := range req.Invariants {
+				fr.Invariants++
+				if len(iv.Tests) > 0 {
+					fr.LinkedInvariants++
+				} else {
+					fr.UntestedInvariants++
+				}
+			}
 		}
 
+		r.TotalInvariants += fr.Invariants
+		r.LinkedInvariants += fr.LinkedInvariants
+		r.UntestedInvariants += fr.UntestedInvariants
 		r.TotalRequirements += fr.Requirements
 		r.TotalACs += fr.ACs
 		r.LinkedACs += fr.LinkedACs
@@ -48,6 +59,14 @@ func Generate(idx *index.Index) *spool.Report {
 		})
 	}
 
+	for _, ui := range idx.UntestedInvariants() {
+		r.UntestedInvariantList = append(r.UntestedInvariantList, spool.UntestedInvariant{
+			ID:          ui.ID,
+			Description: ui.Description,
+			Feature:     ui.Feature,
+		})
+	}
+
 	for _, o := range idx.OrphanedAnnotations() {
 		r.Orphaned = append(r.Orphaned, spool.OrphanedRef{
 			ID:   o.ID,
@@ -58,6 +77,9 @@ func Generate(idx *index.Index) *spool.Report {
 	r.OrphanedCount = len(r.Orphaned)
 
 	sort.Slice(r.Untested, func(i, j int) bool { return r.Untested[i].ID < r.Untested[j].ID })
+	sort.Slice(r.UntestedInvariantList, func(i, j int) bool {
+		return r.UntestedInvariantList[i].ID < r.UntestedInvariantList[j].ID
+	})
 
 	return r
 }
