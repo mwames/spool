@@ -26,10 +26,21 @@ type TraceabilityRequirement struct {
 	File   string           `json:"file"`
 	Line   int              `json:"line"`
 	ACs    []TraceabilityAC `json:"acs"`
+	// Invariants is never filled yet (INVARIANT-2-7).
+	Invariants []TraceabilityInvariant `json:"invariants"`
 }
 
 // TraceabilityAC represents an acceptance criterion in the tree.
 type TraceabilityAC struct {
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	File      string `json:"file"`
+	Line      int    `json:"line"`
+	TestCount int    `json:"testCount"`
+}
+
+// TraceabilityInvariant represents an invariant in the tree.
+type TraceabilityInvariant struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
 	File      string `json:"file"`
