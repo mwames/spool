@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// idPattern matches valid Spool IDs: PREFIX-N or PREFIX-N-N
-var idPattern = regexp.MustCompile(`^[A-Za-z]+-\d+(-\d+)?$`)
+// idPattern matches valid Spool IDs: PREFIX-N, PREFIX-N-N or PREFIX-N-INV-N
+var idPattern = regexp.MustCompile(`^[A-Za-z]+-\d+(-\d+|-[Ii][Nn][Vv]-\d+)?$`)
 
 // IsValid reports whether id is a valid Spool ID.
 func IsValid(id string) bool {
@@ -25,6 +25,10 @@ func NormalizeID(id string) (string, error) {
 	parts := strings.Split(id, "-")
 	parts[0] = strings.ToUpper(parts[0])
 	for i := 1; i < len(parts); i++ {
+		if strings.EqualFold(parts[i], "inv") {
+			parts[i] = "INV"
+			continue
+		}
 		parts[i] = stripLeadingZeros(parts[i])
 	}
 	return strings.Join(parts, "-"), nil

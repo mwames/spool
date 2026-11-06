@@ -25,11 +25,29 @@ func (Markdown) Format(r *spool.Report) ([]byte, error) {
 		b.WriteString(fmt.Sprintf("\n**Totals:** %d requirements, %d ACs, %d linked, %d untested, %d orphaned\n", r.TotalRequirements, r.TotalACs, r.LinkedACs, r.UntestedACs, r.OrphanedCount))
 	}
 
+	// Invariant summary
+	if r.TotalInvariants > 0 {
+		b.WriteString("\n| Feature | Invariants | Linked | Untested |\n")
+		b.WriteString("| ------- | ---------- | ------ | -------- |\n")
+		for _, f := range r.Features {
+			b.WriteString(fmt.Sprintf("| %s | %d | %d | %d |\n", f.Name, f.Invariants, f.LinkedInvariants, f.UntestedInvariants))
+		}
+		b.WriteString(fmt.Sprintf("\n**Invariant totals:** %d invariants, %d linked, %d untested\n", r.TotalInvariants, r.LinkedInvariants, r.UntestedInvariants))
+	}
+
 	// Untested ACs
 	if len(r.Untested) > 0 {
 		b.WriteString("\n## Untested Acceptance Criteria\n\n")
 		for _, u := range r.Untested {
 			b.WriteString(fmt.Sprintf("- **%s**: %s\n", u.ID, u.Description))
+		}
+	}
+
+	// Untested invariants
+	if len(r.UntestedInvariantList) > 0 {
+		b.WriteString("\n## Untested Invariants\n\n")
+		for _, u := range r.UntestedInvariantList {
+			b.WriteString(fmt.Sprintf("- **%s** (%s): %s\n", u.ID, u.Feature, u.Description))
 		}
 	}
 

@@ -37,6 +37,14 @@ requirements:
           Given a registered user with an incorrect password,
           when login is attempted,
           then authentication fails with an error message.
+
+    invariants:                        # Optional: properties that must always hold
+
+      - id: AUTH-1-INV-1               # PREFIX-N-INV-N format
+        title: No Plaintext Passwords
+        description: >
+          A password is never stored or logged in plaintext,
+          whether or not login succeeds.
 ```
 
 ## Key Rules
@@ -44,6 +52,7 @@ requirements:
 - **One feature per file.** The filename is typically `featurename.req`.
 - **IDs must match the feature prefix.** Feature `AUTH` → requirements `AUTH-1`, `AUTH-2` → ACs `AUTH-1-1`, `AUTH-1-2`.
 - **IDs are uppercase with no leading zeros.** `AUTH-1-1`, not `auth-01-01`.
+- **Invariants use the `<REQ>-<n>-INV-<n>` ID format.** For example `AUTH-1-INV-1`, the first invariant of `AUTH-1`. Like ACs, each needs a test, and an untested invariant is reported (severity `untested_invariant`, `error` by default).
 - **Only `status: active` requirements are tracked** for coverage. Use `draft` for work-in-progress and `deprecated` for retired requirements.
 - **Descriptions use Given/When/Then format** for acceptance criteria (recommended, not enforced).
 
@@ -69,6 +78,15 @@ it('rejects invalid password', () => {
 // AUTH-1-1
 #[test]
 fn valid_login() {
+    // test implementation
+}
+```
+
+Annotate a test with an invariant's ID the same way:
+
+```go
+// AUTH-1-INV-1
+func TestPasswordsNeverStored(t *testing.T) {
     // test implementation
 }
 ```

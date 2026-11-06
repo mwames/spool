@@ -90,6 +90,9 @@ func applyDefaults(cfg *Config, projectRoot string) {
 	if cfg.Severity.MissingAC == "" {
 		cfg.Severity.MissingAC = SeverityInfo
 	}
+	if cfg.Severity.UntestedInvariant == "" {
+		cfg.Severity.UntestedInvariant = SeverityError
+	}
 }
 
 func validate(cfg *Config) error {
@@ -111,6 +114,7 @@ func validate(cfg *Config) error {
 		{"untested_ac", cfg.Severity.UntestedAC},
 		{"orphaned_annotation", cfg.Severity.OrphanedAnnotation},
 		{"missing_ac", cfg.Severity.MissingAC},
+		{"untested_invariant", cfg.Severity.UntestedInvariant},
 	}
 	for _, c := range checks {
 		if !validSeverity(c.value) {

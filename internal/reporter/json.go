@@ -62,6 +62,10 @@ func (JSON) Format(r *spool.Report) ([]byte, error) {
 		LinkedACs:         r.LinkedACs,
 		UntestedACs:       r.UntestedACs,
 		OrphanedCount:     r.OrphanedCount,
+
+		TotalInvariants:    r.TotalInvariants,
+		LinkedInvariants:   r.LinkedInvariants,
+		UntestedInvariants: r.UntestedInvariants,
 	}
 
 	for _, f := range r.Features {
@@ -72,11 +76,22 @@ func (JSON) Format(r *spool.Report) ([]byte, error) {
 			LinkedACs:            f.LinkedACs,
 			UntestedACs:          f.UntestedACs,
 			ExcludedRequirements: f.ExcludedRequirements,
+			Invariants:           f.Invariants,
+			LinkedInvariants:     f.LinkedInvariants,
+			UntestedInvariants:   f.UntestedInvariants,
 		})
 	}
 
 	for _, u := range r.Untested {
 		jr.Untested = append(jr.Untested, jsonUntestedAC{
+			ID:          u.ID,
+			Description: u.Description,
+			Feature:     u.Feature,
+		})
+	}
+
+	for _, u := range r.UntestedInvariantList {
+		jr.UntestedInvariantList = append(jr.UntestedInvariantList, jsonUntestedInvariant{
 			ID:          u.ID,
 			Description: u.Description,
 			Feature:     u.Feature,

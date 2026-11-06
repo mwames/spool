@@ -147,6 +147,25 @@ func extractLineNumbers(data []byte, rf *ReqFile) {
 				break
 			}
 		}
+
+		// Find "invariants" within this requirement mapping.
+		for j := 0; j+1 < len(reqNode.Content); j += 2 {
+			if reqNode.Content[j].Value == "invariants" {
+				invSeq := reqNode.Content[j+1]
+				if invSeq.Kind != yaml.SequenceNode {
+					break
+				}
+				for k, invNode := range invSeq.Content {
+					if k >= len(rf.Requirements[i].Invariants) {
+						break
+					}
+					if invNode.Kind == yaml.MappingNode {
+						rf.Requirements[i].Invariants[k].Line = invNode.Line
+					}
+				}
+				break
+			}
+		}
 	}
 }
 
@@ -203,6 +222,16 @@ func normalizeIDs(rf *ReqFile) {
 				rf.Warnings = append(rf.Warnings, fmt.Sprintf("acceptance criterion %q: %v", ac.ID, err))
 			} else {
 				ac.ID = normalized
+			}
+		}
+
+		for j := range r.Invariants {
+			inv := &r.Invariants[j]
+			normalized, err := spoolid.NormalizeID(inv.ID)
+			if err != nil {
+				rf.Warnings = append(rf.Warnings, fmt.Sprintf("invariant %q: %v", inv.ID, err))
+			} else {
+				inv.ID = normalized
 			}
 		}
 	}

@@ -26,11 +26,31 @@ func (Text) Format(r *spool.Report) ([]byte, error) {
 		b.WriteString(fmt.Sprintf("\nTotals: %d requirements, %d ACs, %d linked, %d untested, %d orphaned\n", r.TotalRequirements, r.TotalACs, r.LinkedACs, r.UntestedACs, r.OrphanedCount))
 	}
 
+	// Invariant summary
+	if r.TotalInvariants > 0 {
+		b.WriteString("\n")
+		b.WriteString(fmt.Sprintf("%-20s %10s %8s %10s\n", "Feature", "Invariants", "Linked", "Untested"))
+		b.WriteString(fmt.Sprintf("%-20s %10s %8s %10s\n", "-------", "----------", "------", "--------"))
+		for _, f := range r.Features {
+			b.WriteString(fmt.Sprintf("%-20s %10d %8d %10d\n", f.Name, f.Invariants, f.LinkedInvariants, f.UntestedInvariants))
+		}
+		b.WriteString(fmt.Sprintf("\nInvariant totals: %d invariants, %d linked, %d untested\n", r.TotalInvariants, r.LinkedInvariants, r.UntestedInvariants))
+	}
+
 	// Untested ACs
 	if len(r.Untested) > 0 {
 		b.WriteString("\nUntested Acceptance Criteria\n")
 		b.WriteString("----------------------------\n")
 		for _, u := range r.Untested {
+			b.WriteString(fmt.Sprintf("  %s: %s\n", u.ID, u.Description))
+		}
+	}
+
+	// Untested invariants
+	if len(r.UntestedInvariantList) > 0 {
+		b.WriteString("\nUntested Invariants\n")
+		b.WriteString("-------------------\n")
+		for _, u := range r.UntestedInvariantList {
 			b.WriteString(fmt.Sprintf("  %s: %s\n", u.ID, u.Description))
 		}
 	}
@@ -45,7 +65,7 @@ func (Text) Format(r *spool.Report) ([]byte, error) {
 	}
 
 	// No issues
-	if len(r.Untested) == 0 && len(r.Orphaned) == 0 && r.TotalACs > 0 {
+	if len(r.Untested) == 0 && len(r.UntestedInvariantList) == 0 && len(r.Orphaned) == 0 && r.TotalACs > 0 {
 		b.WriteString("\nFull traceability — no issues found.\n")
 	}
 
