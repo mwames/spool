@@ -26,6 +26,19 @@ func buildDiagnostics(idx *index.Index) map[protocol.DocumentURI][]protocol.Diag
 		})
 	}
 
+	for _, iv := range idx.UntestedInvariants() {
+		fileURI := uri.File(iv.SourceFile)
+		diags[fileURI] = append(diags[fileURI], protocol.Diagnostic{
+			Range: protocol.Range{
+				Start: protocol.Position{Line: uint32(iv.Line - 1)},
+				End:   protocol.Position{Line: uint32(iv.Line - 1), Character: 1000},
+			},
+			Severity: protocol.DiagnosticSeverityWarning,
+			Source:   "spool",
+			Message:  fmt.Sprintf("Untested: %s (%s)", iv.Title, iv.ID),
+		})
+	}
+
 	for _, ann := range idx.OrphanedAnnotations() {
 		fileURI := uri.File(ann.File)
 		diags[fileURI] = append(diags[fileURI], protocol.Diagnostic{

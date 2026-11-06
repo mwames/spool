@@ -62,19 +62,23 @@ func buildTestHover(idx *index.Index, lineText string) *protocol.Hover {
 		return nil
 	}
 
-	ac := idx.AC(id)
-	if ac == nil {
+	var itemID, title, description, reqID string
+	if ac := idx.AC(id); ac != nil {
+		itemID, title, description, reqID = ac.ID, ac.Title, ac.Description, ac.ReqID
+	} else if iv := idx.Invariant(id); iv != nil {
+		itemID, title, description, reqID = iv.ID, iv.Title, iv.Description, iv.ReqID
+	} else {
 		return nil
 	}
 
 	var md strings.Builder
-	fmt.Fprintf(&md, "**%s: %s**\n\n", ac.ID, ac.Title)
+	fmt.Fprintf(&md, "**%s: %s**\n\n", itemID, title)
 
-	if desc := strings.TrimSpace(ac.Description); desc != "" {
+	if desc := strings.TrimSpace(description); desc != "" {
 		fmt.Fprintf(&md, "%s\n\n", desc)
 	}
 
-	if req := idx.Requirement(ac.ReqID); req != nil {
+	if req := idx.Requirement(reqID); req != nil {
 		fmt.Fprintf(&md, "*Requirement: %s — %s*", req.ID, req.Title)
 	}
 
@@ -93,14 +97,22 @@ func buildReqHover(idx *index.Index, lineText string) *protocol.Hover {
 		return nil
 	}
 
-	// Try as AC first.
+	// Try as AC or invariant first.
+	var itemID, itemTitle string
+	var tests []index.LinkedTest
+	found := false
 	if ac := idx.AC(id); ac != nil {
+		itemID, itemTitle, tests, found = ac.ID, ac.Title, ac.Tests, true
+	} else if iv := idx.Invariant(id); iv != nil {
+		itemID, itemTitle, tests, found = iv.ID, iv.Title, iv.Tests, true
+	}
+	if found {
 		var md strings.Builder
-		fmt.Fprintf(&md, "**%s: %s**\n\n", ac.ID, ac.Title)
+		fmt.Fprintf(&md, "**%s: %s**\n\n", itemID, itemTitle)
 
-		if len(ac.Tests) > 0 {
-			fmt.Fprintf(&md, "Covered by %d test(s):\n", len(ac.Tests))
-			for _, t := range ac.Tests {
+		if len(tests) > 0 {
+			fmt.Fprintf(&md, "Covered by %d test(s):\n", len(tests))
+			for _, t := range tests {
 				fmt.Fprintf(&md, "- `%s` (%s:%d)\n", t.Function.Name, filepath.Base(t.File), t.Function.Line)
 			}
 		} else {
@@ -125,6 +137,13 @@ func buildReqHover(idx *index.Index, lineText string) *protocol.Hover {
 				fmt.Fprintf(&md, "- %s: %d test(s)\n", iac.ID, len(iac.Tests))
 			} else {
 				fmt.Fprintf(&md, "- %s: untested\n", iac.ID)
+			}
+		}
+		for _, iv := range req.Invariants {
+			if len(iv.Tests) > 0 {
+				fmt.Fprintf(&md, "- %s: %d test(s)\n", iv.ID, len(iv.Tests))
+			} else {
+				fmt.Fprintf(&md, "- %s: untested\n", iv.ID)
 			}
 		}
 

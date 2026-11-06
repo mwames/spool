@@ -20,13 +20,12 @@ type TraceabilityFeature struct {
 
 // TraceabilityRequirement represents a requirement in the tree.
 type TraceabilityRequirement struct {
-	ID     string           `json:"id"`
-	Title  string           `json:"title"`
-	Status string           `json:"status"`
-	File   string           `json:"file"`
-	Line   int              `json:"line"`
-	ACs    []TraceabilityAC `json:"acs"`
-	// Invariants is never filled yet (INVARIANT-2-7).
+	ID         string                  `json:"id"`
+	Title      string                  `json:"title"`
+	Status     string                  `json:"status"`
+	File       string                  `json:"file"`
+	Line       int                     `json:"line"`
+	ACs        []TraceabilityAC        `json:"acs"`
 	Invariants []TraceabilityInvariant `json:"invariants"`
 }
 
@@ -68,6 +67,8 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 				File:   r.SourceFile,
 				Line:   r.Line,
 				ACs:    make([]TraceabilityAC, 0, len(r.ACs)),
+
+				Invariants: make([]TraceabilityInvariant, 0, len(r.Invariants)),
 			}
 			for _, ac := range r.ACs {
 				tr.ACs = append(tr.ACs, TraceabilityAC{
@@ -76,6 +77,15 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 					File:      ac.SourceFile,
 					Line:      ac.Line,
 					TestCount: len(ac.Tests),
+				})
+			}
+			for _, iv := range r.Invariants {
+				tr.Invariants = append(tr.Invariants, TraceabilityInvariant{
+					ID:        iv.ID,
+					Title:     iv.Title,
+					File:      iv.SourceFile,
+					Line:      iv.Line,
+					TestCount: len(iv.Tests),
 				})
 			}
 			tf.Requirements = append(tf.Requirements, tr)

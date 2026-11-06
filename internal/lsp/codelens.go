@@ -62,8 +62,12 @@ func collectReqCodeLenses(idx *index.Index, lines []string) []protocol.CodeLens 
 		}
 		normalized, _ := spoolid.NormalizeID(candidate)
 
-		ac := idx.AC(normalized)
-		if ac == nil {
+		var tests []index.LinkedTest
+		if ac := idx.AC(normalized); ac != nil {
+			tests = ac.Tests
+		} else if iv := idx.Invariant(normalized); iv != nil {
+			tests = iv.Tests
+		} else {
 			continue
 		}
 
@@ -72,17 +76,17 @@ func collectReqCodeLenses(idx *index.Index, lines []string) []protocol.CodeLens 
 			End:   protocol.Position{Line: uint32(i)},
 		}
 
-		if len(ac.Tests) > 0 {
+		if len(tests) > 0 {
 			// Build location arguments for the command.
 			var args []interface{}
-			for _, t := range ac.Tests {
+			for _, t := range tests {
 				args = append(args, map[string]interface{}{
 					"uri":  string(uri.File(t.File)),
 					"line": t.Function.Line - 1, // 0-based for LSP
 				})
 			}
 
-			title := fmt.Sprintf("%d test(s)", len(ac.Tests))
+			title := fmt.Sprintf("%d test(s)", len(tests))
 			lenses = append(lenses, protocol.CodeLens{
 				Range: r,
 				Command: &protocol.Command{
@@ -130,12 +134,17 @@ func collectTestCodeLenses(idx *index.Index, filePath string, lines []string) []
 		}
 		normalized, _ := spoolid.NormalizeID(candidate)
 
-		ac := idx.AC(normalized)
-		if ac == nil {
+		var id, acTitle, srcFile string
+		var defLine int
+		if ac := idx.AC(normalized); ac != nil {
+			id, acTitle, srcFile, defLine = ac.ID, ac.Title, ac.SourceFile, ac.Line
+		} else if iv := idx.Invariant(normalized); iv != nil {
+			id, acTitle, srcFile, defLine = iv.ID, iv.Title, iv.SourceFile, iv.Line
+		} else {
 			continue
 		}
 
-		title := fmt.Sprintf("covers: %s (%s)", ac.Title, ac.ID)
+		title := fmt.Sprintf("covers: %s (%s)", acTitle, id)
 		lenses = append(lenses, protocol.CodeLens{
 			Range: protocol.Range{
 				Start: protocol.Position{Line: uint32(i)},
@@ -146,8 +155,8 @@ func collectTestCodeLenses(idx *index.Index, filePath string, lines []string) []
 				Command: "spool.goToAC",
 				Arguments: []interface{}{
 					map[string]interface{}{
-						"uri":  string(uri.File(ac.SourceFile)),
-						"line": ac.Line - 1, // 0-based for LSP
+						"uri":  string(uri.File(srcFile)),
+						"line": defLine - 1, // 0-based for LSP
 					},
 				},
 			},
