@@ -24,7 +24,9 @@ import (
 )
 
 // demoReq defines DEMO-1-1, DEMO-1-2 and DEMO-1-INV-1, which demoTest links
-// to tests, and DEMO-1-3 and DEMO-1-INV-2, which it leaves untested.
+// to tests, and DEMO-1-3 and DEMO-1-INV-2, which it leaves untested. Its ACs
+// are written as Given/When/Then and it names no interface, so that it has no
+// lint findings (SPEC-3).
 const demoReq = `feature: DEMO
 
 requirements:
@@ -36,13 +38,13 @@ requirements:
     acceptance_criteria:
       - id: DEMO-1-1
         title: One
-        description: The first AC.
+        description: Given a demo, when it runs, then the first AC holds.
       - id: DEMO-1-2
         title: Two
-        description: The second AC.
+        description: Given a demo, when it runs, then the second AC holds.
       - id: DEMO-1-3
         title: Three
-        description: The third AC, untested.
+        description: Given a demo, when it runs, then the third AC, untested, holds.
     invariants:
       - id: DEMO-1-INV-1
         title: Invariant One
@@ -182,7 +184,7 @@ requirements:
     acceptance_criteria:
       - id: DEMO-5-1
         title: Five
-        description: An AC.
+        description: Given a demo, when it runs, then an AC holds.
 `,
 		"pkg/notes.check": "nothing to see\n",
 	})
