@@ -34,7 +34,7 @@ requirements:
       - Checking that an AC or invariant ID belongs to the requirement
         it's listed under
       - Per-item status on invariants or ACs
-      - Command-line flags and output formats (`spool check` stays text)
+      - Command-line flags and output formats (`spool` stays text)
       - Migrating existing specs and markers to the new format
     acceptance_criteria:
 
@@ -99,7 +99,7 @@ requirements:
         title: Untested Invariant Severity
         description: >
           Given severity.untested_invariant in .spool.yaml,
-          when config is loaded and spool check runs on a project
+          when config is loaded and spool runs on a project
           with an untested invariant,
           then it defaults to error when not set, error makes spool
           check exit 1, warning, info and off leave the exit code to
