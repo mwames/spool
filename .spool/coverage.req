@@ -1,0 +1,164 @@
+# .spool/coverage.req
+
+feature: COVERAGE
+
+requirements:
+
+  - id: COVERAGE-1
+    title: Report Format Flag
+    description: >
+      `spool` takes a --format flag that chooses how the whole-repo report
+      is printed: text, json or markdown. Text stays the default.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-06
+    rationale: >
+      The reporter has shipped JSON and markdown formatters since
+      REPORTER-4 and REPORTER-5, but the CLI always prints text, so a
+      script has to scrape the text table. The slice verifier and CI
+      both need output they can parse.
+    superseded_by:
+    out_of_scope:
+      - Writing the report to a file (REPORTER-6's destination stays unused
+        by the CLI)
+      - Flags for `spool init` and `spool lsp`
+      - Changing the JSON or markdown formatters' output
+    acceptance_criteria:
+
+      - id: COVERAGE-1-1
+        title: Text by Default
+        description: >
+          Given a project and no flags,
+          when spool runs,
+          then it prints the same text report as before and exits with
+          the same status.
+
+      - id: COVERAGE-1-2
+        title: JSON Report
+        description: >
+          Given --format json,
+          when spool runs,
+          then stdout holds the JSON formatter's output for the whole
+          report and nothing else, and the exit status follows the
+          configured severities as it does for text.
+
+      - id: COVERAGE-1-3
+        title: Markdown Report
+        description: >
+          Given --format markdown,
+          when spool runs,
+          then stdout holds the markdown formatter's output for the
+          whole report, and the exit status follows the configured
+          severities as it does for text.
+
+      - id: COVERAGE-1-4
+        title: Usage Errors
+        description: >
+          Given an unknown --format value, an unknown flag, or an
+          unexpected argument,
+          when spool runs,
+          then it prints a message naming the problem to stderr, prints
+          nothing to stdout, and exits 2.
+
+    invariants:
+
+      - id: COVERAGE-1-INV-1
+        title: Stdout Holds Only the Report
+        description: >
+          Whatever the flags and whatever the project contains, parse,
+          scan and index warnings, errors and usage messages go to
+          stderr, so stdout is either empty or exactly one report in the
+          requested format.
+
+  - id: COVERAGE-2
+    title: Coverage for Listed IDs
+    description: >
+      `spool --ids <ID>,<ID>,...` reports, for each listed AC or invariant,
+      whether it has a linked test and which tests those are, and exits
+      non-zero when any of them is untested or unknown. It ignores the
+      rest of the repo.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-06
+    rationale: >
+      The slice verifier must check that a slice's own ACs and invariants
+      are covered. The whole-repo report can't answer that: it fails on
+      unrelated untested items elsewhere, and passes a slice whose item
+      is untested when untested_ac is set below error. A listed ID is
+      required to be covered whatever the configured severities, because
+      listing it is the requirement. Test files are reported relative to
+      the project root, so output from a container and from the host
+      match.
+    superseded_by:
+    out_of_scope:
+      - Expanding a requirement ID to its ACs and invariants
+      - Checking the status of a listed ID's requirement (per-item status
+        is Spool foundations item 3)
+      - Reading the IDs from a file or from stdin
+      - A markdown format for listed IDs
+    acceptance_criteria:
+
+      - id: COVERAGE-2-1
+        title: Listed IDs Reported
+        description: >
+          Given --ids with AC and invariant IDs,
+          when spool runs,
+          then it prints one entry per ID in the order given, with each
+          ID normalized and listed once even if repeated. An entry gives
+          the ID, its state (covered, untested or unknown) and, for each
+          linked test, the test file relative to the project root, the
+          line and the function name. The text format prints the ID and
+          state on one line, each test indented on its own line below as
+          `<file>:<line> <function>`, and a last line `<n>/<m> covered`.
+
+      - id: COVERAGE-2-2
+        title: All Covered Passes
+        description: >
+          Given --ids whose IDs all have at least one linked test,
+          when spool runs,
+          then it exits 0, even if other ACs or invariants in the repo are
+          untested, annotations are orphaned, and those findings are set
+          to error.
+
+      - id: COVERAGE-2-3
+        title: Untested Fails
+        description: >
+          Given --ids where at least one ID has no linked test,
+          when spool runs,
+          then it still reports every listed ID and exits 1, even if
+          untested_ac and untested_invariant are set to warning, info or
+          off.
+
+      - id: COVERAGE-2-4
+        title: Unknown Fails
+        description: >
+          Given --ids with a well-formed AC or invariant ID that no .req
+          file defines,
+          when spool runs,
+          then that ID is reported as unknown with no tests and spool
+          exits 1.
+
+      - id: COVERAGE-2-5
+        title: Bad ID List
+        description: >
+          Given --ids with an empty list, an empty item, a malformed ID,
+          or a requirement ID such as SLICE-8,
+          when spool runs,
+          then it prints a message naming the bad item to stderr, prints
+          nothing to stdout, and exits 2.
+
+      - id: COVERAGE-2-6
+        title: JSON for Listed IDs
+        description: >
+          Given --ids and --format json,
+          when spool runs,
+          then stdout holds one JSON object with "ids", a list of
+          {"id", "kind" ("ac", "invariant" or "unknown"), "covered",
+          "tests"} where each test is {"file", "line", "function"} and
+          "tests" is [] rather than null when there are none, plus
+          "covered" and "total" counts. Given --ids and --format
+          markdown, spool exits 2 as a usage error.
