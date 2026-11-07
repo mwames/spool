@@ -36,7 +36,7 @@ requirements:
           when its .req file is parsed,
           then the requirement holds those paths in the order given, a
           single path as a list of one, and a requirement with no
-          interface holds none.
+          interface, an empty list or a null one holds none.
 
       - id: SPEC-1-2
         title: Malformed Interface
@@ -58,8 +58,10 @@ requirements:
           a "Missing Interfaces" heading as `<ID>: <path>`, the markdown
           report under a heading of the same name, and the JSON report as
           "missingInterfaces", a list of {"id", "path"} that is [] when
-          there are none. Paths that exist, and requirements that aren't
-          active, give no finding.
+          there are none. Findings are ordered as the report's requirements
+          (SPEC-2-2), then as the paths are written. With no findings, the
+          text and markdown reports have no such heading. Paths that exist,
+          and requirements that aren't active, give no finding.
 
       - id: SPEC-1-4
         title: Missing Interface Severity
@@ -75,8 +77,9 @@ requirements:
         description: >
           Given an active requirement with a missing interface path,
           when the language server publishes diagnostics,
-          then the .req file has a warning on the requirement's ID line
-          naming the missing path.
+          then the .req file has one warning per missing path on the
+          requirement's ID line, naming that path. Requirements that aren't
+          active get none.
 
   - id: SPEC-2
     title: Out of Scope Field
@@ -110,7 +113,7 @@ requirements:
           when its .req file is parsed,
           then the requirement holds those items in the order given, a
           single item as a list of one, and a requirement with no
-          out_of_scope, or an empty one, holds none. Given an out_of_scope
+          out_of_scope, an empty list or a null one holds none. Given an out_of_scope
           that is a map or a list holding a map or a list, the file fails
           to parse with an error naming the requirement's ID and the
           out_of_scope field.
@@ -181,8 +184,11 @@ requirements:
           its feature: the text report under a "Not Given/When/Then"
           heading as `<ID>: <title>`, the markdown report under a heading
           of the same name, and the JSON report as "notGivenWhenThen", a
-          list of {"id", "feature"} that is [] when there are none. ACs of
-          requirements that aren't active, and invariants, give no finding.
+          list of {"id", "feature"} that is [] when there are none.
+          Findings are ordered as the report's requirements (SPEC-2-2), then
+          as the ACs are written. With no findings, the text and markdown
+          reports have no such heading. ACs of requirements that aren't
+          active, and invariants, give no finding.
 
       - id: SPEC-3-3
         title: Form Severity
@@ -199,7 +205,8 @@ requirements:
           Given an active requirement with an AC that fails the check,
           when the language server publishes diagnostics,
           then the .req file has a warning on the AC's ID line saying it
-          isn't written as Given/When/Then.
+          isn't written as Given/When/Then. ACs of requirements that aren't
+          active, and invariants, get none.
 
       - id: SPEC-3-5
         title: No Issues Line
@@ -216,5 +223,5 @@ requirements:
         title: Lint Leaves Coverage Alone
         description: >
           Whatever interfaces are missing and whatever ACs fail the check,
-          the coverage counts in the report, the output of spool --ids and
-          its exit status are what they would be without those findings.
+          the coverage counts in the report, and the output and exit status
+          of spool --ids, are what they would be without those findings.
