@@ -1,0 +1,220 @@
+# .spool/spec.req
+
+feature: SPEC
+
+requirements:
+
+  - id: SPEC-1
+    title: Interface Field
+    description: >
+      A requirement may name its interface stub with `interface`: a path, or
+      a list of paths, relative to the project root. Spool reports an active
+      requirement whose interface path doesn't exist.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-07
+    rationale: >
+      The pipeline approves an interface stub before any tests are written,
+      and the agents are pointed at it. A spec naming a stub that was moved
+      or never written sends them to the wrong place, so it fails like an
+      untested AC. A list, because a stub often spans several files.
+    superseded_by:
+    out_of_scope:
+      - Requiring every requirement to have an interface
+      - Globs in interface paths
+      - Checking that a path stays inside the project root
+      - Checking what the stub contains
+    acceptance_criteria:
+
+      - id: SPEC-1-1
+        title: Interface Parsed
+        description: >
+          Given a requirement whose interface is a single path or a list of
+          paths,
+          when its .req file is parsed,
+          then the requirement holds those paths in the order given, a
+          single path as a list of one, and a requirement with no
+          interface holds none.
+
+      - id: SPEC-1-2
+        title: Malformed Interface
+        description: >
+          Given a requirement whose interface is a map, a list holding a
+          map or a list, or an empty path,
+          when its .req file is parsed,
+          then the file fails to parse with an error naming the
+          requirement's ID and the interface field.
+
+      - id: SPEC-1-3
+        title: Missing Interface Reported
+        description: >
+          Given an active requirement whose interface names a path that
+          exists as neither a file nor a directory under the project root,
+          when spool runs,
+          then the report lists one finding per missing path, giving the
+          requirement's ID and the path as written: the text report under
+          a "Missing Interfaces" heading as `<ID>: <path>`, the markdown
+          report under a heading of the same name, and the JSON report as
+          "missingInterfaces", a list of {"id", "path"} that is [] when
+          there are none. Paths that exist, and requirements that aren't
+          active, give no finding.
+
+      - id: SPEC-1-4
+        title: Missing Interface Severity
+        description: >
+          Given .spool.yaml's severity.missing_interface set to error,
+          warning, info or off, or not set,
+          when spool runs with a missing interface path,
+          then it exits 1 only when the severity is error, which is the
+          default, and the finding is reported whatever the severity.
+
+      - id: SPEC-1-5
+        title: Missing Interface Diagnostic
+        description: >
+          Given an active requirement with a missing interface path,
+          when the language server publishes diagnostics,
+          then the .req file has a warning on the requirement's ID line
+          naming the missing path.
+
+  - id: SPEC-2
+    title: Out of Scope Field
+    description: >
+      A requirement may list what it leaves out with `out_of_scope`. Spool
+      parses it and shows it in the JSON report and the requirement's
+      hover, so tools that hand a requirement to an agent can pass it on.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-07
+    rationale: >
+      Specs already use out_of_scope to stop the test and implementation
+      agents from building more than was asked for, but Spool drops it, so
+      a tool reading Spool's output can't pass it on. The JSON report had
+      no per-requirement entries to carry it, so it gains them, along with
+      the interface paths.
+    superseded_by:
+    out_of_scope:
+      - Showing out_of_scope in the text or markdown report
+      - Adding out_of_scope to the --ids output (COVERAGE-2-6 fixes its keys)
+      - Linting what out_of_scope says
+    acceptance_criteria:
+
+      - id: SPEC-2-1
+        title: Out of Scope Parsed
+        description: >
+          Given a requirement whose out_of_scope is a single item or a list
+          of items,
+          when its .req file is parsed,
+          then the requirement holds those items in the order given, a
+          single item as a list of one, and a requirement with no
+          out_of_scope, or an empty one, holds none. Given an out_of_scope
+          that is a map or a list holding a map or a list, the file fails
+          to parse with an error naming the requirement's ID and the
+          out_of_scope field.
+
+      - id: SPEC-2-2
+        title: Requirements in the JSON Report
+        description: >
+          Given --format json,
+          when spool runs,
+          then the report has "requirements", a list with one object per
+          active requirement holding exactly "id", "feature", "title",
+          "interface" (the paths as written) and "outOfScope", each list
+          [] rather than null when empty, ordered as the report's features,
+          then as in the .req file. The report's other keys are unchanged.
+
+      - id: SPEC-2-3
+        title: Out of Scope in the Hover
+        description: >
+          Given a requirement with out_of_scope items,
+          when the language server shows the hover for the requirement's ID,
+          then the hover shows what it shows today, then an "Out of scope"
+          line followed by one bullet per item in order. Given a
+          requirement with none, when its hover is shown, then it is
+          unchanged.
+
+  - id: SPEC-3
+    title: Given/When/Then Lint
+    description: >
+      Spool reports an acceptance criterion of an active requirement whose
+      description isn't written as Given/When/Then.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-07
+    rationale: >
+      The test agent derives tests from each AC's Given, When and Then, so
+      an AC that skips one leaves the agent to guess. The check is loose on
+      wording and line breaks and strict on order. Invariants hold on every
+      run rather than describing one, so they are not written this way and
+      are not checked.
+    superseded_by:
+    out_of_scope:
+      - Checking invariants, requirement descriptions or titles
+      - Checking what each clause says
+    acceptance_criteria:
+
+      - id: SPEC-3-1
+        title: Given/When/Then Form
+        description: >
+          Given an AC description,
+          when it is checked,
+          then it passes when, ignoring leading whitespace, it starts with
+          the word "given", and the words "when" and "then" follow later in
+          that order, matching whole words in any case across line breaks.
+          "Given a project, when spool runs, then it exits 0" passes, and
+          so does "GIVEN x WHEN y THEN z" with each clause on its own line.
+          "Given x, then y", "When x, given y,
+          then z", "Givens x, when y, then z", "Given x, then y, when z"
+          and "Given x when y" fail.
+
+      - id: SPEC-3-2
+        title: Form Findings Reported
+        description: >
+          Given active requirements with ACs that fail the check,
+          when spool runs,
+          then the report lists one finding per such AC, giving its ID and
+          its feature: the text report under a "Not Given/When/Then"
+          heading as `<ID>: <title>`, the markdown report under a heading
+          of the same name, and the JSON report as "notGivenWhenThen", a
+          list of {"id", "feature"} that is [] when there are none. ACs of
+          requirements that aren't active, and invariants, give no finding.
+
+      - id: SPEC-3-3
+        title: Form Severity
+        description: >
+          Given .spool.yaml's severity.given_when_then set to error,
+          warning, info or off, or not set,
+          when spool runs with an AC that fails the check,
+          then it exits 1 only when the severity is error, which is the
+          default, and the finding is reported whatever the severity.
+
+      - id: SPEC-3-4
+        title: Form Diagnostic
+        description: >
+          Given an active requirement with an AC that fails the check,
+          when the language server publishes diagnostics,
+          then the .req file has a warning on the AC's ID line saying it
+          isn't written as Given/When/Then.
+
+      - id: SPEC-3-5
+        title: No Issues Line
+        description: >
+          Given a text report with a missing interface or an AC that fails
+          the check, and no other findings,
+          when spool runs,
+          then the report doesn't end with "Full traceability — no issues
+          found."
+
+    invariants:
+
+      - id: SPEC-3-INV-1
+        title: Lint Leaves Coverage Alone
+        description: >
+          Whatever interfaces are missing and whatever ACs fail the check,
+          the coverage counts in the report, the output of spool --ids and
+          its exit status are what they would be without those findings.
