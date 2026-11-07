@@ -8,7 +8,8 @@ requirements:
     title: Report Format Flag
     description: >
       `spool` takes a --format flag that chooses how the whole-repo report
-      is printed: text, json or markdown. Text stays the default.
+      is printed: text, json or markdown. Text stays the default. Flags
+      may come in any order, each written `--flag value` or `--flag=value`.
     status: active
     deciders:
       - Matt Ames
@@ -40,8 +41,8 @@ requirements:
         description: >
           Given --format json,
           when spool runs,
-          then stdout holds the JSON formatter's output for the whole
-          report and nothing else, and the exit status follows the
+          then stdout holds exactly the JSON formatter's output for the
+          whole report, byte for byte, and the exit status follows the
           configured severities as it does for text.
 
       - id: COVERAGE-1-3
@@ -49,9 +50,9 @@ requirements:
         description: >
           Given --format markdown,
           when spool runs,
-          then stdout holds the markdown formatter's output for the
-          whole report, and the exit status follows the configured
-          severities as it does for text.
+          then stdout holds exactly the markdown formatter's output for
+          the whole report, byte for byte, and the exit status follows the
+          configured severities as it does for text.
 
       - id: COVERAGE-1-4
         title: Usage Errors
@@ -59,8 +60,9 @@ requirements:
           Given an unknown --format value, an unknown flag, or an
           unexpected argument,
           when spool runs,
-          then it prints a message naming the problem to stderr, prints
-          nothing to stdout, and exits 2.
+          then it prints a message to stderr naming the unknown value,
+          flag or argument as it was given, prints nothing to stdout, and
+          exits 2.
 
     invariants:
 
@@ -110,10 +112,14 @@ requirements:
           then it prints one entry per ID in the order given, with each
           ID normalized and listed once even if repeated. An entry gives
           the ID, its state (covered, untested or unknown) and, for each
-          linked test, the test file relative to the project root, the
-          line and the function name. The text format prints the ID and
-          state on one line, each test indented on its own line below as
-          `<file>:<line> <function>`, and a last line `<n>/<m> covered`.
+          linked test, the test file relative to the project root with
+          forward slashes, the line of the test function's declaration,
+          and the function name. An entry's tests are ordered by file,
+          then line. The text format prints, for each entry, a line
+          holding the ID followed by its state, then each test indented
+          on its own line below as `<file>:<line> <function>`, and nothing
+          else but a last line `<n>/<m> covered`, where n counts covered
+          entries and m counts all entries, unknown ones included.
 
       - id: COVERAGE-2-2
         title: All Covered Passes
@@ -148,7 +154,8 @@ requirements:
           Given --ids with an empty list, an empty item, a malformed ID,
           or a requirement ID such as SLICE-8,
           when spool runs,
-          then it prints a message naming the bad item to stderr, prints
+          then it prints a message to stderr naming the bad item as it was
+          given (any message will do for an empty list or item), prints
           nothing to stdout, and exits 2.
 
       - id: COVERAGE-2-6
@@ -160,5 +167,7 @@ requirements:
           {"id", "kind" ("ac", "invariant" or "unknown"), "covered",
           "tests"} where each test is {"file", "line", "function"} and
           "tests" is [] rather than null when there are none, plus
-          "covered" and "total" counts. Given --ids and --format
+          "covered" and "total" counted as in the text format. No object
+          has any other key, and entries and tests follow the order in
+          COVERAGE-2-1. Given --ids and --format
           markdown, spool exits 2 as a usage error.
