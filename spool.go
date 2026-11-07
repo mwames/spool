@@ -69,3 +69,27 @@ type OrphanedRef struct {
 type Formatter interface {
 	Format(report *Report) ([]byte, error)
 }
+
+// CoverageReport lists, for each ID given to `spool --ids`, whether it has a
+// linked test (COVERAGE-2).
+type CoverageReport struct {
+	IDs     []CoverageEntry
+	Covered int
+	Total   int
+}
+
+// CoverageEntry is one listed ID. Kind is "ac", "invariant" or "unknown".
+type CoverageEntry struct {
+	ID      string
+	Kind    string
+	Covered bool
+	Tests   []CoverageTest
+}
+
+// CoverageTest is a test linked to a listed ID. File is relative to the
+// project root.
+type CoverageTest struct {
+	File     string
+	Line     int
+	Function string
+}
