@@ -23,6 +23,28 @@ type jsonReport struct {
 	LinkedInvariants      int                     `json:"linkedInvariants"`
 	UntestedInvariants    int                     `json:"untestedInvariants"`
 	UntestedInvariantList []jsonUntestedInvariant `json:"untestedInvariantList"`
+
+	Requirements      []jsonRequirement      `json:"requirements"`
+	MissingInterfaces []jsonMissingInterface `json:"missingInterfaces"`
+	NotGivenWhenThen  []jsonFormFinding      `json:"notGivenWhenThen"`
+}
+
+type jsonRequirement struct {
+	ID         string   `json:"id"`
+	Feature    string   `json:"feature"`
+	Title      string   `json:"title"`
+	Interface  []string `json:"interface"`
+	OutOfScope []string `json:"outOfScope"`
+}
+
+type jsonMissingInterface struct {
+	ID   string `json:"id"`
+	Path string `json:"path"`
+}
+
+type jsonFormFinding struct {
+	ID      string `json:"id"`
+	Feature string `json:"feature"`
 }
 
 type jsonFeatureReport struct {
@@ -66,6 +88,27 @@ func (JSON) Format(r *spool.Report) ([]byte, error) {
 		TotalInvariants:    r.TotalInvariants,
 		LinkedInvariants:   r.LinkedInvariants,
 		UntestedInvariants: r.UntestedInvariants,
+
+		Requirements:      []jsonRequirement{},
+		MissingInterfaces: []jsonMissingInterface{},
+		NotGivenWhenThen:  []jsonFormFinding{},
+	}
+
+	for _, q := range r.Requirements {
+		jq := jsonRequirement{ID: q.ID, Feature: q.Feature, Title: q.Title, Interface: q.Interface, OutOfScope: q.OutOfScope}
+		if jq.Interface == nil {
+			jq.Interface = []string{}
+		}
+		if jq.OutOfScope == nil {
+			jq.OutOfScope = []string{}
+		}
+		jr.Requirements = append(jr.Requirements, jq)
+	}
+	for _, m := range r.MissingInterfaces {
+		jr.MissingInterfaces = append(jr.MissingInterfaces, jsonMissingInterface{ID: m.ID, Path: m.Path})
+	}
+	for _, f := range r.NotGivenWhenThen {
+		jr.NotGivenWhenThen = append(jr.NotGivenWhenThen, jsonFormFinding{ID: f.ID, Feature: f.Feature})
 	}
 
 	for _, f := range r.Features {

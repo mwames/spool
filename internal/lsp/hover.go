@@ -147,6 +147,13 @@ func buildReqHover(idx *index.Index, lineText string) *protocol.Hover {
 			}
 		}
 
+		if len(req.OutOfScope) > 0 {
+			md.WriteString("\nOut of scope:\n")
+			for _, item := range req.OutOfScope {
+				fmt.Fprintf(&md, "- %s\n", item)
+			}
+		}
+
 		return &protocol.Hover{
 			Contents: protocol.MarkupContent{
 				Kind:  protocol.Markdown,

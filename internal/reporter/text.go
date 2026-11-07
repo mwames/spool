@@ -64,8 +64,25 @@ func (Text) Format(r *spool.Report) ([]byte, error) {
 		}
 	}
 
+	// Lint findings
+	if len(r.MissingInterfaces) > 0 {
+		b.WriteString("\nMissing Interfaces\n")
+		b.WriteString("------------------\n")
+		for _, m := range r.MissingInterfaces {
+			b.WriteString(fmt.Sprintf("  %s: %s\n", m.ID, m.Path))
+		}
+	}
+	if len(r.NotGivenWhenThen) > 0 {
+		b.WriteString("\nNot Given/When/Then\n")
+		b.WriteString("-------------------\n")
+		for _, f := range r.NotGivenWhenThen {
+			b.WriteString(fmt.Sprintf("  %s: %s\n", f.ID, f.Title))
+		}
+	}
+
 	// No issues
-	if len(r.Untested) == 0 && len(r.UntestedInvariantList) == 0 && len(r.Orphaned) == 0 && r.TotalACs > 0 {
+	if len(r.MissingInterfaces) == 0 && len(r.NotGivenWhenThen) == 0 &&
+		len(r.Untested) == 0 && len(r.UntestedInvariantList) == 0 && len(r.Orphaned) == 0 && r.TotalACs > 0 {
 		b.WriteString("\nFull traceability — no issues found.\n")
 	}
 

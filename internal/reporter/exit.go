@@ -17,5 +17,11 @@ func ExitCode(r *spool.Report, sev config.SeverityConfig) int {
 	if r.UntestedInvariants > 0 && sev.UntestedInvariant == config.SeverityError {
 		return 1
 	}
+	if len(r.MissingInterfaces) > 0 && sev.MissingInterface.Or(config.SeverityError) == config.SeverityError {
+		return 1
+	}
+	if len(r.NotGivenWhenThen) > 0 && sev.GivenWhenThen.Or(config.SeverityError) == config.SeverityError {
+		return 1
+	}
 	return 0
 }

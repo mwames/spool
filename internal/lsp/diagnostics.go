@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mwames/Spool/internal/index"
+	"github.com/mwames/Spool/internal/lint"
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 )
@@ -52,7 +53,36 @@ func buildDiagnostics(idx *index.Index) map[protocol.DocumentURI][]protocol.Diag
 		})
 	}
 
+	for _, feat := range idx.Features() {
+		for _, req := range feat.Requirements {
+			if req.Status != "active" {
+				continue
+			}
+			for _, ac := range req.ACs {
+				if lint.GivenWhenThen(ac.Description) {
+					continue
+				}
+				fileURI := uri.File(ac.SourceFile)
+				diags[fileURI] = append(diags[fileURI], lineDiagnostic(ac.Line,
+					fmt.Sprintf("Not written as Given/When/Then: %s (%s)", ac.Title, ac.ID)))
+			}
+		}
+	}
+
 	return diags
+}
+
+// lineDiagnostic is a warning across the 1-based line.
+func lineDiagnostic(line int, message string) protocol.Diagnostic {
+	return protocol.Diagnostic{
+		Range: protocol.Range{
+			Start: protocol.Position{Line: uint32(line - 1)},
+			End:   protocol.Position{Line: uint32(line - 1), Character: 1000},
+		},
+		Severity: protocol.DiagnosticSeverityWarning,
+		Source:   "spool",
+		Message:  message,
+	}
 }
 
 // interfaceDiagnostics collects a warning on the ID line of each active
@@ -60,7 +90,17 @@ func buildDiagnostics(idx *index.Index) map[protocol.DocumentURI][]protocol.Diag
 // ACs not written as Given/When/Then are warned about by buildDiagnostics
 // (SPEC-3-4).
 func interfaceDiagnostics(idx *index.Index, root string) map[protocol.DocumentURI][]protocol.Diagnostic {
-	return nil
+	diags := make(map[protocol.DocumentURI][]protocol.Diagnostic)
+	for _, m := range lint.MissingInterfaces(idx, root) {
+		req := idx.Requirement(m.ID)
+		if req == nil {
+			continue
+		}
+		fileURI := uri.File(req.SourceFile)
+		diags[fileURI] = append(diags[fileURI], lineDiagnostic(req.Line,
+			fmt.Sprintf("Interface path does not exist: %s (%s)", m.Path, m.ID)))
+	}
+	return diags
 }
 
 // publishDiagnostics sends diagnostics for all affected files to the client.
@@ -78,6 +118,9 @@ func (s *Server) publishDiagnostics(ctx context.Context) {
 	}
 
 	diags := buildDiagnostics(idx)
+	for fileURI, fileDiags := range interfaceDiagnostics(idx, s.projectRoot) {
+		diags[fileURI] = append(diags[fileURI], fileDiags...)
+	}
 
 	// Publish diagnostics for files that have warnings.
 	for fileURI, fileDiags := range diags {

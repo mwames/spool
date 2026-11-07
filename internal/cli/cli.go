@@ -10,6 +10,7 @@ import (
 	spool "github.com/mwames/Spool"
 	"github.com/mwames/Spool/internal/config"
 	"github.com/mwames/Spool/internal/index"
+	"github.com/mwames/Spool/internal/lint"
 	"github.com/mwames/Spool/internal/parser"
 	"github.com/mwames/Spool/internal/project"
 	"github.com/mwames/Spool/internal/reporter"
@@ -86,6 +87,8 @@ func Run(args []string, root string, stdout, stderr io.Writer) int {
 
 	// Generate and print report.
 	report := reporter.Generate(idx)
+	report.MissingInterfaces = lint.MissingInterfaces(idx, root)
+	report.NotGivenWhenThen = lint.NotGivenWhenThen(idx)
 	var f spool.Formatter = reporter.Text{}
 	switch format {
 	case "json":
