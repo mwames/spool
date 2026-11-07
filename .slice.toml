@@ -1,0 +1,5 @@
+# slice run: what each agent role may write (SLICE-8-5). The impl role may
+# write a source path only if it matches no test glob.
+[paths]
+test = ["**/*_test.go", "**/testdata/**"]
+source = ["**/*.go", "internal/scaffold/templates/**"]
