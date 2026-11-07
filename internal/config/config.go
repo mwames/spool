@@ -28,6 +28,12 @@ type SeverityConfig struct {
 	MissingAC          Severity `yaml:"missing_ac"`
 	// UntestedInvariant is the severity of an untested invariant (INVARIANT-1-6).
 	UntestedInvariant Severity `yaml:"untested_invariant"`
+	// MissingInterface is the severity of an interface path that doesn't
+	// exist (SPEC-1-4).
+	MissingInterface Severity `yaml:"missing_interface"`
+	// GivenWhenThen is the severity of an AC not written as Given/When/Then
+	// (SPEC-3-3).
+	GivenWhenThen Severity `yaml:"given_when_then"`
 }
 
 // DefaultExcludePatterns apply when .spool.yaml sets no exclude_patterns.

@@ -31,6 +31,8 @@ type Requirement struct {
 	Date               string                `yaml:"date"`
 	Rationale          string                `yaml:"rationale"`
 	SupersededBy       string                `yaml:"superseded_by"`
+	Interface          StringList            `yaml:"interface"`    // paths relative to the project root (SPEC-1)
+	OutOfScope         StringList            `yaml:"out_of_scope"` // (SPEC-2)
 	AcceptanceCriteria []AcceptanceCriterion `yaml:"acceptance_criteria"`
 	Invariants         []Invariant           `yaml:"invariants"`
 	Line               int                   `yaml:"-"` // 1-based line number in the .req file

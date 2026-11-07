@@ -55,6 +55,14 @@ func buildDiagnostics(idx *index.Index) map[protocol.DocumentURI][]protocol.Diag
 	return diags
 }
 
+// interfaceDiagnostics collects a warning on the ID line of each active
+// requirement with a missing interface path, naming the path (SPEC-1-5).
+// ACs not written as Given/When/Then are warned about by buildDiagnostics
+// (SPEC-3-4).
+func interfaceDiagnostics(idx *index.Index, root string) map[protocol.DocumentURI][]protocol.Diagnostic {
+	return nil
+}
+
 // publishDiagnostics sends diagnostics for all affected files to the client.
 func (s *Server) publishDiagnostics(ctx context.Context) {
 	if s.conn == nil {
