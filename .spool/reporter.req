@@ -92,6 +92,7 @@ requirements:
         title: Minimal Interface Contract
         description: >
           Given the published Formatter interface,
+          when a formatter is written against it,
           then it must expose only Format(report *Report)
           ([]byte, error) as a required method.
 

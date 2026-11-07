@@ -21,6 +21,15 @@ const (
 	SeverityOff     Severity = "off"
 )
 
+// Or returns def when s is unset. The severities added after the first
+// release stay unset in Config and default here, to error (SPEC-1-4, SPEC-3-3).
+func (s Severity) Or(def Severity) Severity {
+	if s == "" {
+		return def
+	}
+	return s
+}
+
 // SeverityConfig controls diagnostic severity levels.
 type SeverityConfig struct {
 	UntestedAC         Severity `yaml:"untested_ac"`
@@ -28,6 +37,12 @@ type SeverityConfig struct {
 	MissingAC          Severity `yaml:"missing_ac"`
 	// UntestedInvariant is the severity of an untested invariant (INVARIANT-1-6).
 	UntestedInvariant Severity `yaml:"untested_invariant"`
+	// MissingInterface is the severity of an interface path that doesn't
+	// exist (SPEC-1-4). Unset means error; see Or.
+	MissingInterface Severity `yaml:"missing_interface"`
+	// GivenWhenThen is the severity of an AC not written as Given/When/Then
+	// (SPEC-3-3).
+	GivenWhenThen Severity `yaml:"given_when_then"`
 }
 
 // DefaultExcludePatterns apply when .spool.yaml sets no exclude_patterns.
@@ -115,6 +130,8 @@ func validate(cfg *Config) error {
 		{"orphaned_annotation", cfg.Severity.OrphanedAnnotation},
 		{"missing_ac", cfg.Severity.MissingAC},
 		{"untested_invariant", cfg.Severity.UntestedInvariant},
+		{"missing_interface", cfg.Severity.MissingInterface.Or(SeverityError)},
+		{"given_when_then", cfg.Severity.GivenWhenThen.Or(SeverityError)},
 	}
 	for _, c := range checks {
 		if !validSeverity(c.value) {

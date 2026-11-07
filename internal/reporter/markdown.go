@@ -59,5 +59,19 @@ func (Markdown) Format(r *spool.Report) ([]byte, error) {
 		}
 	}
 
+	// Lint findings
+	if len(r.MissingInterfaces) > 0 {
+		b.WriteString("\n## Missing Interfaces\n\n")
+		for _, m := range r.MissingInterfaces {
+			b.WriteString(fmt.Sprintf("- **%s**: `%s`\n", m.ID, m.Path))
+		}
+	}
+	if len(r.NotGivenWhenThen) > 0 {
+		b.WriteString("\n## Not Given/When/Then\n\n")
+		for _, f := range r.NotGivenWhenThen {
+			b.WriteString(fmt.Sprintf("- **%s** (%s): %s\n", f.ID, f.Feature, f.Title))
+		}
+	}
+
 	return []byte(b.String()), nil
 }

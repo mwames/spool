@@ -33,8 +33,10 @@ func req(id, status string, acs ...parser.AcceptanceCriterion) parser.Requiremen
 	}
 }
 
+// ac returns an AC whose description is written as Given/When/Then, so that
+// it draws no form diagnostic (SPEC-3-4).
 func ac(id string, line int) parser.AcceptanceCriterion {
-	return parser.AcceptanceCriterion{ID: id, Title: id, Description: "test", Line: line}
+	return parser.AcceptanceCriterion{ID: id, Title: id, Description: "Given a test, when it runs, then it passes", Line: line}
 }
 
 func scanResult(path string, mappings ...scanner.TestMapping) scanner.FileResult {

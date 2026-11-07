@@ -250,6 +250,7 @@ requirements:
         title: Minimal Interface Contract
         description: >
           Given the published Interpreter interface,
+          when an interpreter is written against it,
           then it must expose only Supports(filename string) bool
           and ExtractTestFunctions(filename string, contents []byte)
           as required methods.

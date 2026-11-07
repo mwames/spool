@@ -29,6 +29,40 @@ type Report struct {
 	LinkedInvariants      int
 	UntestedInvariants    int
 	UntestedInvariantList []UntestedInvariant
+
+	// Requirements lists every active requirement, ordered as Features,
+	// then as in the .req file (SPEC-2-2).
+	Requirements []RequirementEntry
+
+	// Lint findings. They never change the coverage counts above
+	// (SPEC-3-INV-1).
+	MissingInterfaces []MissingInterface // SPEC-1-3
+	NotGivenWhenThen  []FormFinding      // SPEC-3-2
+}
+
+// RequirementEntry is an active requirement with its interface paths and
+// out_of_scope items, as written (SPEC-2-2).
+type RequirementEntry struct {
+	ID         string
+	Feature    string
+	Title      string
+	Interface  []string
+	OutOfScope []string
+}
+
+// MissingInterface is an interface path of an active requirement that
+// exists as neither a file nor a directory under the project root.
+type MissingInterface struct {
+	ID   string // the requirement's ID
+	Path string // as written
+}
+
+// FormFinding is an AC of an active requirement that isn't written as
+// Given/When/Then.
+type FormFinding struct {
+	ID      string
+	Feature string
+	Title   string
 }
 
 // FeatureReport captures per-feature traceability totals.

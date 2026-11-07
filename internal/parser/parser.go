@@ -31,6 +31,8 @@ type Requirement struct {
 	Date               string                `yaml:"date"`
 	Rationale          string                `yaml:"rationale"`
 	SupersededBy       string                `yaml:"superseded_by"`
+	Interface          StringList            `yaml:"interface"`    // paths relative to the project root (SPEC-1)
+	OutOfScope         StringList            `yaml:"out_of_scope"` // (SPEC-2)
 	AcceptanceCriteria []AcceptanceCriterion `yaml:"acceptance_criteria"`
 	Invariants         []Invariant           `yaml:"invariants"`
 	Line               int                   `yaml:"-"` // 1-based line number in the .req file
@@ -82,6 +84,10 @@ func ParseFile(path string) (*ReqFile, error) {
 		return nil, err
 	}
 
+	if err := checkStringLists(data); err != nil {
+		return nil, fmt.Errorf("parsing %s: %w", filepath.Base(absPath), err)
+	}
+
 	rf := &ReqFile{}
 	if err := yaml.Unmarshal(data, rf); err != nil {
 		return nil, fmt.Errorf("parsing %s: %w", filepath.Base(absPath), err)
@@ -92,6 +98,57 @@ func ParseFile(path string) (*ReqFile, error) {
 	normalizeIDs(rf)
 
 	return rf, nil
+}
+
+// checkStringLists validates the interface and out_of_scope fields of each
+// requirement, naming the requirement's ID and the field in the error
+// (SPEC-1-2, SPEC-2-1). A file that isn't valid YAML is left to the
+// caller's own parse.
+func checkStringLists(data []byte) error {
+	var doc yaml.Node
+	if err := yaml.Unmarshal(data, &doc); err != nil {
+		return nil
+	}
+	if doc.Kind != yaml.DocumentNode || len(doc.Content) == 0 || doc.Content[0].Kind != yaml.MappingNode {
+		return nil
+	}
+	root := doc.Content[0]
+	for i := 0; i+1 < len(root.Content); i += 2 {
+		reqs := root.Content[i+1]
+		if root.Content[i].Value != "requirements" || reqs.Kind != yaml.SequenceNode {
+			continue
+		}
+		for _, req := range reqs.Content {
+			if req.Kind != yaml.MappingNode {
+				continue
+			}
+			id := ""
+			for j := 0; j+1 < len(req.Content); j += 2 {
+				if req.Content[j].Value == "id" {
+					id = req.Content[j+1].Value
+				}
+			}
+			for j := 0; j+1 < len(req.Content); j += 2 {
+				field := req.Content[j].Value
+				if field != "interface" && field != "out_of_scope" {
+					continue
+				}
+				var l StringList
+				err := req.Content[j+1].Decode(&l)
+				if err == nil && field == "interface" {
+					for _, p := range l {
+						if p == "" {
+							err = fmt.Errorf("line %d: path must not be empty", req.Content[j+1].Line)
+						}
+					}
+				}
+				if err != nil {
+					return fmt.Errorf("requirement %s: %s: %v", id, field, err)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // extractLineNumbers uses yaml.Node to populate Line fields on requirements and ACs.

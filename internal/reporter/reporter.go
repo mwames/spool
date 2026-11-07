@@ -22,6 +22,13 @@ func Generate(idx *index.Index) *spool.Report {
 				fr.ExcludedRequirements++
 				continue
 			}
+			r.Requirements = append(r.Requirements, spool.RequirementEntry{
+				ID:         req.ID,
+				Feature:    req.Feature,
+				Title:      req.Title,
+				Interface:  []string(req.Interface),
+				OutOfScope: []string(req.OutOfScope),
+			})
 			fr.Requirements++
 			for _, ac := range req.ACs {
 				fr.ACs++
