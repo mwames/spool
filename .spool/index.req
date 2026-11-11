@@ -137,8 +137,8 @@ requirements:
   - id: INDEX-4
     title: Untested AC Detection
     description: >
-      The index must identify all ACs belonging to active
-      requirements that have no linked test functions.
+      The index must identify all active ACs (SPEC-4-5) that
+      have no linked test functions.
     status: active
     deciders:
       - Matt Ames
@@ -159,7 +159,7 @@ requirements:
       - id: INDEX-4-1
         title: Active Untested AC
         description: >
-          Given an AC belonging to an active requirement
+          Given an active AC (SPEC-4-5)
           with no linked test functions,
           when the index is queried,
           then the AC appears in the untested AC collection.
@@ -167,7 +167,7 @@ requirements:
       - id: INDEX-4-2
         title: Active Tested AC
         description: >
-          Given an AC belonging to an active requirement
+          Given an active AC (SPEC-4-5)
           with one or more linked test functions,
           when the index is queried,
           then the AC does not appear in the untested AC collection.
@@ -175,8 +175,7 @@ requirements:
       - id: INDEX-4-3
         title: Non-Active Excluded
         description: >
-          Given an AC belonging to a requirement with any
-          status other than active,
+          Given an AC that isn't active (SPEC-4-5),
           when the index is queried,
           then the AC does not appear in the untested AC collection
           regardless of whether it has linked test functions.

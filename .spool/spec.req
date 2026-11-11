@@ -9,7 +9,7 @@ requirements:
     description: >
       A requirement may name its interface stub with `interface`: a path, or
       a list of paths, relative to the project root. Spool reports an active
-      requirement whose interface path doesn't exist.
+      or draft requirement whose interface path doesn't exist.
     status: active
     deciders:
       - Matt Ames
@@ -50,8 +50,9 @@ requirements:
       - id: SPEC-1-3
         title: Missing Interface Reported
         description: >
-          Given an active requirement whose interface names a path that
-          exists as neither a file nor a directory under the project root,
+          Given a requirement whose status (SPEC-4-4) is active or draft
+          and whose interface names a path that exists as neither a file
+          nor a directory under the project root,
           when spool runs,
           then the report lists one finding per missing path, giving the
           requirement's ID and the path as written: the text report under
@@ -61,7 +62,7 @@ requirements:
           there are none. Findings are ordered as the report's requirements
           (SPEC-2-2), then as the paths are written. With no findings, the
           text and markdown reports have no such heading. Paths that exist,
-          and requirements that aren't active, give no finding.
+          and deprecated or superseded requirements, give no finding.
 
       - id: SPEC-1-4
         title: Missing Interface Severity
@@ -75,11 +76,12 @@ requirements:
       - id: SPEC-1-5
         title: Missing Interface Diagnostic
         description: >
-          Given an active requirement with a missing interface path,
+          Given an active or draft requirement (SPEC-4-4) with a missing
+          interface path,
           when the language server publishes diagnostics,
           then the .req file has one warning per missing path on the
-          requirement's ID line, naming that path. Requirements that aren't
-          active get none.
+          requirement's ID line, naming that path. Deprecated and superseded
+          requirements get none.
 
   - id: SPEC-2
     title: Out of Scope Field
@@ -124,8 +126,9 @@ requirements:
           Given --format json,
           when spool runs,
           then the report has "requirements", a list with one object per
-          active requirement holding exactly "id", "feature", "title",
-          "interface" (the paths as written) and "outOfScope", each list
+          requirement the report counts (SPEC-4-6) holding exactly "id",
+          "feature", "title", "status" (SPEC-4-4), "interface" (the paths
+          as written) and "outOfScope", each list
           [] rather than null when empty, ordered as the report's features,
           then as in the .req file. The report's other keys are unchanged.
 
@@ -142,7 +145,7 @@ requirements:
   - id: SPEC-3
     title: Given/When/Then Lint
     description: >
-      Spool reports an acceptance criterion of an active requirement whose
+      Spool reports an active or draft acceptance criterion whose
       description isn't written as Given/When/Then.
     status: active
     deciders:
@@ -178,7 +181,8 @@ requirements:
       - id: SPEC-3-2
         title: Form Findings Reported
         description: >
-          Given active requirements with ACs that fail the check,
+          Given ACs whose status (SPEC-4-5) is active or draft and that
+          fail the check,
           when spool runs,
           then the report lists one finding per such AC, giving its ID and
           its feature: the text report under a "Not Given/When/Then"
@@ -187,8 +191,8 @@ requirements:
           list of {"id", "feature"} that is [] when there are none.
           Findings are ordered as the report's requirements (SPEC-2-2), then
           as the ACs are written. With no findings, the text and markdown
-          reports have no such heading. ACs of requirements that aren't
-          active, and invariants, give no finding.
+          reports have no such heading. Deprecated ACs, ACs of superseded
+          requirements, and invariants give no finding.
 
       - id: SPEC-3-3
         title: Form Severity
@@ -202,11 +206,11 @@ requirements:
       - id: SPEC-3-4
         title: Form Diagnostic
         description: >
-          Given an active requirement with an AC that fails the check,
+          Given an active or draft AC (SPEC-4-5) that fails the check,
           when the language server publishes diagnostics,
           then the .req file has a warning on the AC's ID line saying it
-          isn't written as Given/When/Then. ACs of requirements that aren't
-          active, and invariants, get none.
+          isn't written as Given/When/Then. Deprecated ACs, ACs of
+          superseded requirements, and invariants get none.
 
       - id: SPEC-3-5
         title: No Issues Line
@@ -225,3 +229,123 @@ requirements:
           Whatever interfaces are missing and whatever ACs fail the check,
           the coverage counts in the report, and the output and exit status
           of spool --ids, are what they would be without those findings.
+
+  - id: SPEC-4
+    title: Item Status
+    description: >
+      Each AC and invariant may have its own status: draft, active or
+      deprecated. Coverage counts an item only when its status is active, and
+      a requirement's status is folded from its items' statuses.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-09
+    rationale: >
+      Approving a spec means approving its items, and a revision often adds
+      ACs to a requirement that already has passing tests. With one status
+      per requirement, the new ACs either fail coverage before anyone has
+      approved them or hide the requirement's existing coverage while they
+      wait. With a status per item, approval is setting an item to active,
+      and only approved items are expected to have tests. An item with no
+      status takes its requirement's, so existing specs keep their meaning.
+      The folded status puts draft above active, so a requirement with
+      anything awaiting approval shows as draft; it decides what the lint
+      checks and what tools see, not what coverage counts. Drafts are
+      linted so a malformed AC or a missing stub is caught in review, before
+      approval. Superseding retires a whole requirement, so it stays a
+      requirement-level status. An unknown status fails the parse, so a
+      typo can't quietly drop an item from coverage.
+    superseded_by:
+    out_of_scope:
+      - Showing item status in the hover, the code lenses, or the text and
+        markdown reports
+      - Item status in the api package's views
+      - Changing spool --ids for a listed ID that is draft or deprecated
+      - Superseding a single AC or invariant
+      - Tooling to approve items; approving is editing their status
+    acceptance_criteria:
+
+      - id: SPEC-4-1
+        title: Item Status Parsed
+        description: >
+          Given an AC or invariant whose status is draft, active or
+          deprecated, or that has no status,
+          when its .req file is parsed,
+          then the item's status is the one written, or its requirement's
+          status as written when it has none.
+
+      - id: SPEC-4-2
+        title: Unknown Status
+        description: >
+          Given a requirement whose status is not draft, active, deprecated
+          or superseded, or an AC or invariant whose status is not draft,
+          active or deprecated,
+          when its .req file is parsed,
+          then the file fails to parse with an error naming that ID and the
+          status as written.
+
+      - id: SPEC-4-3
+        title: Missing Requirement Status
+        description: >
+          Given a requirement with no status that has no ACs or invariants,
+          or has one with no status,
+          when its .req file is parsed,
+          then the file fails to parse with an error naming the requirement's
+          ID and the status field. A requirement with no status whose ACs and
+          invariants all have one parses.
+
+      - id: SPEC-4-4
+        title: Folded Requirement Status
+        description: >
+          Given a requirement,
+          when its .req file is parsed,
+          then its status is superseded when it is written as superseded;
+          otherwise, when it has ACs or invariants, the highest of their
+          statuses (SPEC-4-1) in the order deprecated < active < draft;
+          otherwise the status written. This is the requirement's status
+          wherever Spool shows it or filters on it: the language server's
+          traceability tree, the api package's views and Status filter, and
+          the JSON report's "requirements".
+
+      - id: SPEC-4-5
+        title: Coverage by Item
+        description: >
+          Given requirements with active, draft and deprecated ACs and
+          invariants,
+          when spool runs,
+          then an item is active when its status (SPEC-4-1) is active and its
+          requirement isn't written as superseded, and only active items are
+          counted, listed as untested, warned about as untested by the
+          language server, or affect the exit status. Draft and deprecated
+          items, and every item of a superseded requirement, are none of
+          these, whatever their tests.
+
+      - id: SPEC-4-6
+        title: Requirements Counted
+        description: >
+          Given requirements with and without active ACs or invariants
+          (SPEC-4-5),
+          when spool runs,
+          then a requirement is counted in its feature's and the report's
+          requirement totals when at least one of its ACs or invariants is
+          active, or when it has none and its status is active; every other
+          requirement is counted as excluded.
+
+      - id: SPEC-4-7
+        title: Item Status in the Tree
+        description: >
+          Given the language server's traceability tree,
+          when it is built,
+          then each AC and invariant in it has "status", its status as in
+          SPEC-4-1, and each requirement's "status" is its folded status
+          (SPEC-4-4).
+
+    invariants:
+
+      - id: SPEC-4-INV-1
+        title: Requirement Status Alone Is Unchanged
+        description: >
+          In a project where no AC or invariant has a status of its own, an
+          item is active exactly when its requirement's status is active,
+          and every requirement's status is the one written.

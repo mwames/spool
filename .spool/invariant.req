@@ -83,7 +83,7 @@ requirements:
       - id: INVARIANT-1-5
         title: Untested Invariants Reported
         description: >
-          Given an active requirement with an invariant that no test
+          Given an active invariant (SPEC-4-5) that no test
           annotates,
           when the text report is generated,
           then it lists the invariant's ID and description under its
@@ -92,7 +92,7 @@ requirements:
           in the totals, separately from ACs, and says "Full
           traceability" only when there are no untested ACs, no
           untested invariants and no orphaned annotations.
-          Invariants of requirements that aren't active are neither
+          Invariants that aren't active (SPEC-4-5) are neither
           counted nor listed.
 
       - id: INVARIANT-1-6
@@ -178,7 +178,7 @@ requirements:
       - id: INVARIANT-2-3
         title: Diagnostics for Invariants
         description: >
-          Given an active requirement with an invariant that has no
+          Given an active invariant (SPEC-4-5) that has no
           covering tests, and another that has,
           when the index is built,
           then a warning diagnostic naming the untested invariant's
