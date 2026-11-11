@@ -40,12 +40,13 @@ type Report struct {
 	NotGivenWhenThen  []FormFinding      // SPEC-3-2
 }
 
-// RequirementEntry is an active requirement with its interface paths and
-// out_of_scope items, as written (SPEC-2-2).
+// RequirementEntry is a requirement the report counts (SPEC-4-6) with its
+// interface paths and out_of_scope items, as written (SPEC-2-2).
 type RequirementEntry struct {
 	ID         string
 	Feature    string
 	Title      string
+	Status     string // the folded status (SPEC-4-4)
 	Interface  []string
 	OutOfScope []string
 }

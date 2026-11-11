@@ -33,6 +33,7 @@ type TraceabilityRequirement struct {
 type TraceabilityAC struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
+	Status    string `json:"status"` // as in SPEC-4-1 (SPEC-4-7)
 	File      string `json:"file"`
 	Line      int    `json:"line"`
 	TestCount int    `json:"testCount"`
@@ -42,6 +43,7 @@ type TraceabilityAC struct {
 type TraceabilityInvariant struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
+	Status    string `json:"status"` // as in SPEC-4-1 (SPEC-4-7)
 	File      string `json:"file"`
 	Line      int    `json:"line"`
 	TestCount int    `json:"testCount"`

@@ -25,7 +25,7 @@ type Requirement struct {
 	ID                 string                `yaml:"id"`
 	Title              string                `yaml:"title"`
 	Description        string                `yaml:"description"`
-	Status             string                `yaml:"status"`
+	Status             string                `yaml:"status"` // folded once parsed (SPEC-4-4)
 	Deciders           []string              `yaml:"deciders"`
 	Consulted          []string              `yaml:"consulted"`
 	Date               string                `yaml:"date"`
@@ -43,7 +43,8 @@ type AcceptanceCriterion struct {
 	ID          string `yaml:"id"`
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
-	Line        int    `yaml:"-"` // 1-based line number in the .req file
+	Status      string `yaml:"status"` // its own, else its requirement's as written (SPEC-4-1)
+	Line        int    `yaml:"-"`      // 1-based line number in the .req file
 }
 
 // Invariant is a property a requirement must keep on every run, with an ID of
@@ -52,7 +53,8 @@ type Invariant struct {
 	ID          string `yaml:"id"`
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
-	Line        int    `yaml:"-"` // 1-based line number in the .req file
+	Status      string `yaml:"status"` // its own, else its requirement's as written (SPEC-4-1)
+	Line        int    `yaml:"-"`      // 1-based line number in the .req file
 }
 
 // FileError records a parse failure for a specific file.
