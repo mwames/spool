@@ -95,6 +95,10 @@ func ParseFile(path string) (*ReqFile, error) {
 		return nil, fmt.Errorf("parsing %s: %w", filepath.Base(absPath), err)
 	}
 
+	if err := resolveStatuses(rf); err != nil {
+		return nil, fmt.Errorf("parsing %s: %w", filepath.Base(absPath), err)
+	}
+
 	rf.SourceFile = absPath
 	extractLineNumbers(data, rf)
 	normalizeIDs(rf)
@@ -148,6 +152,73 @@ func checkStringLists(data []byte) error {
 					return fmt.Errorf("requirement %s: %s: %v", id, field, err)
 				}
 			}
+		}
+	}
+	return nil
+}
+
+// statusRank orders item statuses for folding: deprecated < active < draft
+// (SPEC-4-4).
+var statusRank = map[string]int{"deprecated": 0, "active": 1, "draft": 2}
+
+// resolveStatuses checks every status, gives each item without one its
+// requirement's as written, and folds each requirement's status from its
+// items' (SPEC-4-1 to SPEC-4-4).
+func resolveStatuses(rf *ReqFile) error {
+	for i := range rf.Requirements {
+		r := &rf.Requirements[i]
+		if r.Status != "" && r.Status != "superseded" {
+			if _, ok := statusRank[r.Status]; !ok {
+				return fmt.Errorf("requirement %s: unknown status %q", r.ID, r.Status)
+			}
+		}
+		for _, a := range r.AcceptanceCriteria {
+			if _, ok := statusRank[a.Status]; a.Status != "" && !ok {
+				return fmt.Errorf("acceptance criterion %s: unknown status %q", a.ID, a.Status)
+			}
+		}
+		for _, v := range r.Invariants {
+			if _, ok := statusRank[v.Status]; v.Status != "" && !ok {
+				return fmt.Errorf("invariant %s: unknown status %q", v.ID, v.Status)
+			}
+		}
+
+		written := r.Status
+		items := len(r.AcceptanceCriteria) + len(r.Invariants)
+		folded := ""
+		fold := func(status string) {
+			if status == "" {
+				status = written
+			}
+			if folded == "" || statusRank[status] > statusRank[folded] {
+				folded = status
+			}
+		}
+		for j := range r.AcceptanceCriteria {
+			a := &r.AcceptanceCriteria[j]
+			if a.Status == "" {
+				if written == "" {
+					return fmt.Errorf("requirement %s: status is missing", r.ID)
+				}
+				a.Status = written
+			}
+			fold(a.Status)
+		}
+		for j := range r.Invariants {
+			v := &r.Invariants[j]
+			if v.Status == "" {
+				if written == "" {
+					return fmt.Errorf("requirement %s: status is missing", r.ID)
+				}
+				v.Status = written
+			}
+			fold(v.Status)
+		}
+		if written == "" && items == 0 {
+			return fmt.Errorf("requirement %s: status is missing", r.ID)
+		}
+		if written != "superseded" && items > 0 {
+			r.Status = folded
 		}
 	}
 	return nil

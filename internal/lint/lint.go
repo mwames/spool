@@ -35,14 +35,14 @@ var (
 	thenRe  = regexp.MustCompile(`(?i)\bthen\b`)
 )
 
-// MissingInterfaces returns one finding per interface path of an active
-// requirement that exists as neither a file nor a directory under root
+// MissingInterfaces returns one finding per interface path of an active or
+// draft requirement that exists as neither a file nor a directory under root
 // (SPEC-1-3).
 func MissingInterfaces(idx *index.Index, root string) []spool.MissingInterface {
 	var out []spool.MissingInterface
 	for _, feat := range idx.Features() {
 		for _, req := range feat.Requirements {
-			if req.Status != "active" {
+			if req.Status != "active" && req.Status != "draft" {
 				continue
 			}
 			for _, p := range req.Interface {
@@ -55,16 +55,19 @@ func MissingInterfaces(idx *index.Index, root string) []spool.MissingInterface {
 	return out
 }
 
-// NotGivenWhenThen returns one finding per AC of an active requirement whose
-// description fails GivenWhenThen (SPEC-3-2).
+// NotGivenWhenThen returns one finding per active or draft AC, not of a
+// superseded requirement, whose description fails GivenWhenThen (SPEC-3-2).
 func NotGivenWhenThen(idx *index.Index) []spool.FormFinding {
 	var out []spool.FormFinding
 	for _, feat := range idx.Features() {
 		for _, req := range feat.Requirements {
-			if req.Status != "active" {
+			if req.Status != "active" && req.Status != "draft" {
 				continue
 			}
 			for _, ac := range req.ACs {
+				if ac.Status != "active" && ac.Status != "draft" {
+					continue
+				}
 				if !GivenWhenThen(ac.Description) {
 					out = append(out, spool.FormFinding{ID: ac.ID, Feature: ac.Feature, Title: ac.Title})
 				}

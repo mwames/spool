@@ -211,15 +211,48 @@ func (idx *Index) Invariant(id string) *IndexedInvariant {
 	return idx.invariants[id]
 }
 
-// UntestedInvariants returns all invariants belonging to active requirements
-// with no linked tests.
+// activeItem reports whether an item with the given status counts: its
+// status is active and its requirement isn't superseded (SPEC-4-5).
+func (ir *IndexedReq) activeItem(status string) bool {
+	return status == "active" && ir.Status != "superseded"
+}
+
+// ActiveACs returns the requirement's active ACs (SPEC-4-5).
+func (ir *IndexedReq) ActiveACs() []*IndexedAC {
+	var out []*IndexedAC
+	for _, ia := range ir.ACs {
+		if ir.activeItem(ia.Status) {
+			out = append(out, ia)
+		}
+	}
+	return out
+}
+
+// ActiveInvariants returns the requirement's active invariants (SPEC-4-5).
+func (ir *IndexedReq) ActiveInvariants() []*IndexedInvariant {
+	var out []*IndexedInvariant
+	for _, iv := range ir.Invariants {
+		if ir.activeItem(iv.Status) {
+			out = append(out, iv)
+		}
+	}
+	return out
+}
+
+// Counted reports whether the report counts the requirement: it has an
+// active AC or invariant, or has no items and is active (SPEC-4-6).
+func (ir *IndexedReq) Counted() bool {
+	if len(ir.ACs)+len(ir.Invariants) == 0 {
+		return ir.Status == "active"
+	}
+	return len(ir.ActiveACs())+len(ir.ActiveInvariants()) > 0
+}
+
+// UntestedInvariants returns all active invariants with no linked tests.
 func (idx *Index) UntestedInvariants() []*IndexedInvariant {
 	var out []*IndexedInvariant
 	for _, ir := range idx.requirements {
-		if ir.Status != "active" {
-			continue
-		}
-		for _, iv := range ir.Invariants {
+		for _, iv := range ir.ActiveInvariants() {
 			if len(iv.Tests) == 0 {
 				out = append(out, iv)
 			}
@@ -228,14 +261,11 @@ func (idx *Index) UntestedInvariants() []*IndexedInvariant {
 	return out
 }
 
-// UntestedACs returns all ACs belonging to active requirements with no linked tests.
+// UntestedACs returns all active ACs with no linked tests.
 func (idx *Index) UntestedACs() []*IndexedAC {
 	var out []*IndexedAC
 	for _, ir := range idx.requirements {
-		if ir.Status != "active" {
-			continue
-		}
-		for _, ia := range ir.ACs {
+		for _, ia := range ir.ActiveACs() {
 			if len(ia.Tests) == 0 {
 				out = append(out, ia)
 			}

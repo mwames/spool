@@ -18,7 +18,7 @@ func Generate(idx *index.Index) *spool.Report {
 		fr := spool.FeatureReport{Name: feat.Name}
 
 		for _, req := range feat.Requirements {
-			if req.Status != "active" {
+			if !req.Counted() {
 				fr.ExcludedRequirements++
 				continue
 			}
@@ -26,11 +26,12 @@ func Generate(idx *index.Index) *spool.Report {
 				ID:         req.ID,
 				Feature:    req.Feature,
 				Title:      req.Title,
+				Status:     req.Status,
 				Interface:  []string(req.Interface),
 				OutOfScope: []string(req.OutOfScope),
 			})
 			fr.Requirements++
-			for _, ac := range req.ACs {
+			for _, ac := range req.ActiveACs() {
 				fr.ACs++
 				if len(ac.Tests) > 0 {
 					fr.LinkedACs++
@@ -38,7 +39,7 @@ func Generate(idx *index.Index) *spool.Report {
 					fr.UntestedACs++
 				}
 			}
-			for _, iv := range req.Invariants {
+			for _, iv := range req.ActiveInvariants() {
 				fr.Invariants++
 				if len(iv.Tests) > 0 {
 					fr.LinkedInvariants++

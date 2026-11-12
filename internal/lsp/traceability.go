@@ -74,6 +74,7 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 			for _, ac := range r.ACs {
 				tr.ACs = append(tr.ACs, TraceabilityAC{
 					ID:        ac.ID,
+					Status:    ac.Status,
 					Title:     ac.Title,
 					File:      ac.SourceFile,
 					Line:      ac.Line,
@@ -83,6 +84,7 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 			for _, iv := range r.Invariants {
 				tr.Invariants = append(tr.Invariants, TraceabilityInvariant{
 					ID:        iv.ID,
+					Status:    iv.Status,
 					Title:     iv.Title,
 					File:      iv.SourceFile,
 					Line:      iv.Line,
