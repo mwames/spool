@@ -19,6 +19,7 @@ import (
 
 type acDef struct {
 	ID, Title, Description string
+	Status                 string // written only when set (SPEC-4-1)
 }
 
 type reqDef struct {
@@ -130,6 +131,9 @@ func renderReqFile(feat featureDef) string {
 			fmt.Fprintf(&sb, "      - id: %s\n", ac.ID)
 			fmt.Fprintf(&sb, "        title: %s\n", acTitle)
 			fmt.Fprintf(&sb, "        description: %s\n", acDesc)
+			if ac.Status != "" {
+				fmt.Fprintf(&sb, "        status: %s\n", ac.Status)
+			}
 		}
 	}
 	return sb.String()

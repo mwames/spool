@@ -1,7 +1,6 @@
 package lsp
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,9 +32,15 @@ func TestInterfaceDiagnostics_MissingPath(t *testing.T) {
 	draft := req("AUTH-4", "draft", ac("AUTH-4-1", 30))
 	draft.Line = 27
 	draft.Interface = parser.StringList{"draft/missing.go"}
+	deprecated := req("AUTH-5", "deprecated", ac("AUTH-5-1", 38))
+	deprecated.Line = 35
+	deprecated.Interface = parser.StringList{"deprecated/missing.go"}
+	superseded := req("AUTH-6", "superseded", parser.AcceptanceCriterion{ID: "AUTH-6-1", Title: "AUTH-6-1", Description: "Given a, when b, then c", Status: "active", Line: 46})
+	superseded.Line = 43
+	superseded.Interface = parser.StringList{"superseded/missing.go"}
 
 	idx := buildTestIndex(
-		[]*parser.ReqFile{reqFile("AUTH", one, two, clean, draft)},
+		[]*parser.ReqFile{reqFile("AUTH", one, two, clean, draft, deprecated, superseded)},
 		[]scanner.FileResult{scanResult("/tests/auth_test.go",
 			mapping("TestOne", 5, "AUTH-1-1"),
 			mapping("TestTwo", 8, "AUTH-2-1"),
@@ -47,9 +52,10 @@ func TestInterfaceDiagnostics_MissingPath(t *testing.T) {
 
 	fileDiags := diags[uri.File("/reqs/AUTH.req")]
 	wantLine := map[string]uint32{ // missing path → 0-based ID line
-		"stub/missing.go": 2,
-		"./gone/a.go":     10,
-		"gone/dir":        10,
+		"stub/missing.go":  2,
+		"./gone/a.go":      10,
+		"gone/dir":         10,
+		"draft/missing.go": 26,
 	}
 	for path, line := range wantLine {
 		found := 0
@@ -69,14 +75,14 @@ func TestInterfaceDiagnostics_MissingPath(t *testing.T) {
 		if d.Severity != protocol.DiagnosticSeverityWarning {
 			t.Errorf("diagnostic %q: severity = %v, want Warning", d.Message, d.Severity)
 		}
-		if d.Range.Start.Line != 2 && d.Range.Start.Line != 10 {
+		if d.Range.Start.Line != 2 && d.Range.Start.Line != 10 && d.Range.Start.Line != 26 {
 			t.Errorf("diagnostic %q on line %d, want only the ID lines of requirements with a missing path", d.Message, d.Range.Start.Line)
 		}
 		if strings.Contains(d.Message, "present.go") {
 			t.Errorf("diagnostic %q names a path that exists", d.Message)
 		}
-		if strings.Contains(d.Message, "draft/missing.go") {
-			t.Errorf("diagnostic %q names a path of a requirement that isn't active", d.Message)
+		if strings.Contains(d.Message, "deprecated/missing.go") || strings.Contains(d.Message, "superseded/missing.go") {
+			t.Errorf("diagnostic %q names a path of a deprecated or superseded requirement", d.Message)
 		}
 	}
 	for fileURI, ds := range diags {
@@ -133,21 +139,20 @@ func TestBuildDiagnostics_GivenWhenThenNoDiagnostic(t *testing.T) {
 
 // SPEC-3-4
 func TestBuildDiagnostics_GivenWhenThenNotActiveOrInvariant(t *testing.T) {
-	active := req("AUTH-1", "active", ac("AUTH-1-1", 6))
+	unformed := func(id, status string, line int) parser.AcceptanceCriterion {
+		return parser.AcceptanceCriterion{ID: id, Title: "Unformed", Description: "Spool reports it.", Status: status, Line: line}
+	}
+	active := req("AUTH-1", "active", ac("AUTH-1-1", 6), unformed("AUTH-1-2", "deprecated", 8))
 	active.Line = 3
 	active.Invariants = []parser.Invariant{
-		{ID: "AUTH-1-INV-1", Title: "Holds", Description: "Passwords are never logged", Line: 9},
+		{ID: "AUTH-1-INV-1", Title: "Holds", Description: "Passwords are never logged", Status: "active", Line: 9},
 	}
-	var reqs []parser.Requirement
-	reqs = append(reqs, active)
-	for i, status := range []string{"draft", "deprecated"} {
-		id := fmt.Sprintf("AUTH-%d", i+2)
-		r := req(id, status, parser.AcceptanceCriterion{ID: id + "-1", Title: "Unformed", Description: "Spool reports it.", Line: 15 + 6*i})
-		r.Line = 12 + 6*i
-		reqs = append(reqs, r)
-	}
+	deprecated := req("AUTH-2", "deprecated", unformed("AUTH-2-1", "", 15))
+	deprecated.Line = 12
+	superseded := req("AUTH-3", "superseded", unformed("AUTH-3-1", "active", 21), unformed("AUTH-3-2", "draft", 23))
+	superseded.Line = 18
 	idx := buildTestIndex(
-		[]*parser.ReqFile{reqFile("AUTH", reqs...)},
+		[]*parser.ReqFile{reqFile("AUTH", active, deprecated, superseded)},
 		[]scanner.FileResult{scanResult("/tests/auth_test.go",
 			mapping("TestOne", 5, "AUTH-1-1"),
 			mapping("TestInv", 8, "AUTH-1-INV-1"),
@@ -155,7 +160,43 @@ func TestBuildDiagnostics_GivenWhenThenNotActiveOrInvariant(t *testing.T) {
 	)
 
 	if diags := buildDiagnostics(idx); len(diags[uri.File("/reqs/AUTH.req")]) != 0 {
-		t.Errorf("diagnostics = %+v, want none for invariants or ACs of requirements that aren't active", diags)
+		t.Errorf("diagnostics = %+v, want none for invariants, deprecated ACs or ACs of superseded requirements", diags)
+	}
+}
+
+// SPEC-3-4
+func TestBuildDiagnostics_GivenWhenThenDraft(t *testing.T) {
+	unformed := func(id, status string, line int) parser.AcceptanceCriterion {
+		return parser.AcceptanceCriterion{ID: id, Title: "Unformed " + id, Description: "Spool reports it.", Status: status, Line: line}
+	}
+	// AUTH-1 is written active and folded draft by its draft AC; AUTH-2 is
+	// written draft.
+	withDraft := req("AUTH-1", "draft", ac("AUTH-1-1", 6), unformed("AUTH-1-2", "draft", 9))
+	withDraft.Line = 3
+	draft := req("AUTH-2", "draft", unformed("AUTH-2-1", "", 15))
+	draft.Line = 12
+	idx := buildTestIndex(
+		[]*parser.ReqFile{reqFile("AUTH", withDraft, draft)},
+		[]scanner.FileResult{scanResult("/tests/auth_test.go", mapping("TestOne", 5, "AUTH-1-1"))},
+	)
+
+	fileDiags := buildDiagnostics(idx)[uri.File("/reqs/AUTH.req")]
+	want := map[uint32]string{8: "AUTH-1-2", 14: "AUTH-2-1"} // 0-based AC lines
+	if len(fileDiags) != len(want) {
+		t.Fatalf("len(diags) = %d, want %d (one per draft AC not written as Given/When/Then): %+v", len(fileDiags), len(want), fileDiags)
+	}
+	for _, d := range fileDiags {
+		id, ok := want[d.Range.Start.Line]
+		if !ok {
+			t.Errorf("diagnostic %q on line %d, want only lines %v", d.Message, d.Range.Start.Line, want)
+			continue
+		}
+		if !strings.Contains(d.Message, "Given/When/Then") {
+			t.Errorf("diagnostic %q on %s's line, want it to say it isn't written as Given/When/Then", d.Message, id)
+		}
+		if d.Severity != protocol.DiagnosticSeverityWarning {
+			t.Errorf("diagnostic %q: severity = %v, want Warning", d.Message, d.Severity)
+		}
 	}
 }
 

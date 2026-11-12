@@ -24,7 +24,14 @@ func reqFile(feature string, reqs ...parser.Requirement) *parser.ReqFile {
 	}
 }
 
+// req returns a requirement as parsed: an AC with no status of its own takes
+// the requirement's (SPEC-4-1).
 func req(id, status string, acs ...parser.AcceptanceCriterion) parser.Requirement {
+	for i := range acs {
+		if acs[i].Status == "" {
+			acs[i].Status = status
+		}
+	}
 	return parser.Requirement{ID: id, Title: id, Status: status, AcceptanceCriteria: acs}
 }
 

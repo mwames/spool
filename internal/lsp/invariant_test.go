@@ -19,8 +19,15 @@ func inv(id string, line int) parser.Invariant {
 	return parser.Invariant{ID: id, Title: id + " title", Description: id + " description", Line: line}
 }
 
-// withInvariants returns r with the given invariants listed after its ACs.
+// withInvariants returns r with the given invariants listed after its ACs,
+// as parsed: one with no status of its own takes the requirement's
+// (SPEC-4-1).
 func withInvariants(r parser.Requirement, invs ...parser.Invariant) parser.Requirement {
+	for i := range invs {
+		if invs[i].Status == "" {
+			invs[i].Status = r.Status
+		}
+	}
 	r.Invariants = invs
 	return r
 }
@@ -59,11 +66,11 @@ func invReqFile(path string) *parser.ReqFile {
 			Status: "active",
 			Line:   3,
 			AcceptanceCriteria: []parser.AcceptanceCriterion{
-				{ID: "AUTH-1-1", Title: "Valid Credentials", Description: "Given valid creds", Line: 7},
+				{ID: "AUTH-1-1", Title: "Valid Credentials", Description: "Given valid creds", Status: "active", Line: 7},
 			},
 			Invariants: []parser.Invariant{
-				{ID: "AUTH-1-INV-1", Title: "No Plaintext Passwords", Description: "Passwords are never logged", Line: 11},
-				{ID: "AUTH-1-INV-2", Title: "Sessions Expire", Description: "Every session has an expiry", Line: 14},
+				{ID: "AUTH-1-INV-1", Title: "No Plaintext Passwords", Description: "Passwords are never logged", Status: "active", Line: 11},
+				{ID: "AUTH-1-INV-2", Title: "Sessions Expire", Description: "Every session has an expiry", Status: "active", Line: 14},
 			},
 		}},
 	}
@@ -582,6 +589,7 @@ func TestCollectLinks_RequirementStillTargetsFirstACTest(t *testing.T) {
 // --- INVARIANT-2-7: traceability tree ---
 
 // INVARIANT-2-7
+// SPEC-4-7
 func TestBuildTraceabilityTree_Invariants(t *testing.T) {
 	idx := buildTestIndex(
 		[]*parser.ReqFile{invReqFile("/reqs/AUTH.req")},
@@ -598,8 +606,8 @@ func TestBuildTraceabilityTree_Invariants(t *testing.T) {
 	r := tree.Features[0].Requirements[0]
 
 	wantInvs := []TraceabilityInvariant{
-		{ID: "AUTH-1-INV-1", Title: "No Plaintext Passwords", File: "/reqs/AUTH.req", Line: 11, TestCount: 2},
-		{ID: "AUTH-1-INV-2", Title: "Sessions Expire", File: "/reqs/AUTH.req", Line: 14, TestCount: 0},
+		{ID: "AUTH-1-INV-1", Title: "No Plaintext Passwords", Status: "active", File: "/reqs/AUTH.req", Line: 11, TestCount: 2},
+		{ID: "AUTH-1-INV-2", Title: "Sessions Expire", Status: "active", File: "/reqs/AUTH.req", Line: 14, TestCount: 0},
 	}
 	if len(r.Invariants) != len(wantInvs) {
 		t.Fatalf("invariants = %+v, want %+v", r.Invariants, wantInvs)
@@ -611,7 +619,7 @@ func TestBuildTraceabilityTree_Invariants(t *testing.T) {
 	}
 
 	wantACs := []TraceabilityAC{
-		{ID: "AUTH-1-1", Title: "Valid Credentials", File: "/reqs/AUTH.req", Line: 7, TestCount: 1},
+		{ID: "AUTH-1-1", Title: "Valid Credentials", Status: "active", File: "/reqs/AUTH.req", Line: 7, TestCount: 1},
 	}
 	if len(r.ACs) != 1 || r.ACs[0] != wantACs[0] {
 		t.Errorf("acs = %+v, want %+v", r.ACs, wantACs)

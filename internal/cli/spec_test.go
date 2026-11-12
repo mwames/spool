@@ -38,7 +38,11 @@ func lintConfig(field, sev string) string {
 // ifaceReq names interface paths: LINT-2, written first, a single path
 // ifaceProject writes only when asked to, LINT-1 a list holding a file and a
 // directory that ifaceProject always writes and two paths, out of
-// alphabetical order, it writes only when asked to, and the draft LINT-3 a
+// alphabetical order, it writes only when asked to. LINT-7, written
+// deprecated with an active AC and so active (SPEC-4-4), and the draft
+// LINT-3, written last, each name a path ifaceProject writes only when asked
+// to. LINT-4, deprecated, LINT-5, superseded with an active AC, and LINT-6,
+// written active with only a deprecated AC and so deprecated, each name a
 // path it never writes. Every AC is written as Given/When/Then.
 const ifaceReq = `feature: LINT
 
@@ -71,6 +75,49 @@ requirements:
           when spool runs,
           then it is checked.
 
+  - id: LINT-4
+    title: Deprecated
+    description: A deprecated requirement.
+    status: deprecated
+    interface: deprecated/missing.go
+    acceptance_criteria:
+      - id: LINT-4-1
+        title: Four
+        description: Given a deprecation, when spool runs, then it is skipped.
+
+  - id: LINT-5
+    title: Superseded
+    description: A superseded requirement.
+    status: superseded
+    interface: superseded/missing.go
+    acceptance_criteria:
+      - id: LINT-5-1
+        title: Five
+        description: Given a supersession, when spool runs, then it is skipped.
+        status: active
+
+  - id: LINT-6
+    title: Retired
+    description: Written active, with only a deprecated AC.
+    status: active
+    interface: retired/missing.go
+    acceptance_criteria:
+      - id: LINT-6-1
+        title: Six
+        description: Given a retirement, when spool runs, then it is skipped.
+        status: deprecated
+
+  - id: LINT-7
+    title: Revived
+    description: Written deprecated, with an active AC.
+    status: deprecated
+    interface: revived/missing.go
+    acceptance_criteria:
+      - id: LINT-7-1
+        title: Seven
+        description: Given a revival, when spool runs, then it is checked.
+        status: active
+
   - id: LINT-3
     title: Draft
     description: A draft requirement.
@@ -79,16 +126,19 @@ requirements:
     acceptance_criteria:
       - id: LINT-3-1
         title: Three
-        description: Given a draft, when spool runs, then it is skipped.
+        description: Given a draft, when spool runs, then it is checked.
 `
 
 // ifaceMissingText is the text report's "Missing Interfaces" entries for
-// ifaceProject with its paths missing, in order: as the report's
-// requirements, then as the paths are written.
+// ifaceProject with its paths missing, in order: as the report's features,
+// then as the requirements are in the .req file, then as the paths are
+// written.
 var ifaceMissingText = []string{
 	"LINT-2: lib/missing.go",
 	"LINT-1: missing/dir",
 	"LINT-1: ./stub/missing.go",
+	"LINT-7: revived/missing.go",
+	"LINT-3: draft/missing.go",
 }
 
 type idPath struct {
@@ -100,6 +150,8 @@ var ifaceMissingJSON = []idPath{
 	{"LINT-2", "lib/missing.go"},
 	{"LINT-1", "missing/dir"},
 	{"LINT-1", "./stub/missing.go"},
+	{"LINT-7", "revived/missing.go"},
+	{"LINT-3", "draft/missing.go"},
 }
 
 // ifaceProject writes ifaceReq with a test for each active AC. Unless
@@ -111,21 +163,26 @@ func ifaceProject(t *testing.T, spoolYAML string, present bool) string {
 		".spool.yaml":      spoolYAML,
 		".spool/lint.req":  ifaceReq,
 		"stub/present.go":  "package stub\n",
-		"pkg/lint_test.go": annotatedTest("LINT-1-1", "LINT-2-1"),
+		"pkg/lint_test.go": annotatedTest("LINT-1-1", "LINT-2-1", "LINT-7-1"),
 	}
 	if present {
 		files["stub/missing.go"] = "package stub\n"
 		files["missing/dir/keep.txt"] = "\n"
 		files["lib/missing.go"] = "package lib\n"
+		files["revived/missing.go"] = "package revived\n"
+		files["draft/missing.go"] = "package draft\n"
 	}
 	writeFiles(t, root, files)
 	return root
 }
 
 // formReq has ACs written as Given/When/Then and ACs that aren't, in an
-// active requirement and out of ID order, an invariant that isn't, and a
-// draft requirement with an AC that isn't. formOtherReq is a second feature
-// with an AC that isn't, in a file read before formReq's.
+// active requirement and out of ID order, among them a draft AC and a
+// deprecated one, and an invariant that isn't. FORM-2 is superseded with an
+// active AC that isn't, and FORM-3, written deprecated, has an active AC
+// that isn't and an AC that isn't and inherits deprecated. formOtherReq is a
+// second feature, in a file read before formReq's, with an active AC that
+// isn't and, last, a draft requirement with an AC that isn't.
 const formReq = `feature: FORM
 
 requirements:
@@ -147,19 +204,41 @@ requirements:
       - id: FORM-1-2
         title: Unformed AC
         description: Spool reports it.
+      - id: FORM-1-4
+        title: Draft Unformed
+        description: A draft AC is reported.
+        status: draft
+      - id: FORM-1-5
+        title: Deprecated Unformed
+        description: A deprecated AC is skipped.
+        status: deprecated
     invariants:
       - id: FORM-1-INV-1
         title: Holds
         description: It always holds.
 
   - id: FORM-2
-    title: Draft
-    description: A draft requirement.
-    status: draft
+    title: Superseded
+    description: A superseded requirement.
+    status: superseded
     acceptance_criteria:
       - id: FORM-2-1
-        title: Draft AC
+        title: Superseded AC
         description: Not checked.
+        status: active
+
+  - id: FORM-3
+    title: Revived
+    description: Written deprecated, with an active AC.
+    status: deprecated
+    acceptance_criteria:
+      - id: FORM-3-1
+        title: Revived Unformed
+        description: A revived AC is reported.
+        status: active
+      - id: FORM-3-2
+        title: Retired Unformed
+        description: A retired AC is skipped.
 `
 
 const formOtherReq = `feature: OTHER
@@ -174,23 +253,38 @@ requirements:
       - id: OTHER-1-1
         title: Other Unformed
         description: When x, given y, then z.
+
+  - id: OTHER-2
+    title: Other Draft
+    description: A draft requirement.
+    status: draft
+    acceptance_criteria:
+      - id: OTHER-2-1
+        title: Draft Requirement Unformed
+        description: An AC of a draft requirement is reported.
 `
 
-// formFixes rewrites the ACs of formReq and formOtherReq that aren't
-// Given/When/Then so that they are.
+// formFixes rewrites the ACs of formReq and formOtherReq that are reported
+// as not Given/When/Then so that they are.
 var formFixes = strings.NewReplacer(
 	"description: Spool reports it.", "description: Given a form, when it is checked, then Spool reports it.",
 	"description: Given a form, then it fails.", "description: Given a form, when it is checked, then it fails.",
 	"description: When x, given y, then z.", "description: Given x, when y, then z.",
+	"description: A draft AC is reported.", "description: Given a draft AC, when it is checked, then it passes.",
+	"description: A revived AC is reported.", "description: Given a revived AC, when it is checked, then it passes.",
+	"description: An AC of a draft requirement is reported.", "description: Given a draft requirement, when it is checked, then it passes.",
 )
 
 // formNotGWTText is the text report's "Not Given/When/Then" entries for
-// formProject, in order: as the report's requirements, then as the ACs are
-// written.
+// formProject, in order: as the report's features, then as the requirements
+// are in the .req file, then as the ACs are written.
 var formNotGWTText = []string{
 	"FORM-1-3: No When",
 	"FORM-1-2: Unformed AC",
+	"FORM-1-4: Draft Unformed",
+	"FORM-3-1: Revived Unformed",
 	"OTHER-1-1: Other Unformed",
+	"OTHER-2-1: Draft Requirement Unformed",
 }
 
 type idFeature struct {
@@ -201,7 +295,10 @@ type idFeature struct {
 var formNotGWTJSON = []idFeature{
 	{"FORM-1-3", "FORM"},
 	{"FORM-1-2", "FORM"},
+	{"FORM-1-4", "FORM"},
+	{"FORM-3-1", "FORM"},
 	{"OTHER-1-1", "OTHER"},
+	{"OTHER-2-1", "OTHER"},
 }
 
 // formProject writes formReq and formOtherReq with a test for each active AC
@@ -217,7 +314,7 @@ func formProject(t *testing.T, spoolYAML string, formed bool) string {
 		".spool.yaml":        spoolYAML,
 		".spool/form.req":    form,
 		".spool/a_other.req": other,
-		"pkg/form_test.go":   annotatedTest("FORM-1-1", "FORM-1-2", "FORM-1-3", "FORM-1-INV-1", "OTHER-1-1"),
+		"pkg/form_test.go":   annotatedTest("FORM-1-1", "FORM-1-2", "FORM-1-3", "FORM-1-INV-1", "FORM-3-1", "OTHER-1-1"),
 	})
 	return root
 }
@@ -339,7 +436,7 @@ func TestRun_MissingInterfacesMarkdown(t *testing.T) {
 		last = at
 	}
 	for _, l := range section {
-		for _, p := range []string{"stub/present.go", "draft/missing.go", "LINT-3"} {
+		for _, p := range []string{"stub/present.go", "deprecated/missing.go", "superseded/missing.go", "retired/missing.go", "LINT-4", "LINT-5", "LINT-6"} {
 			if strings.Contains(l, p) {
 				t.Errorf("line %q under \"Missing Interfaces\" names %s, which gives no finding", l, p)
 			}
@@ -478,7 +575,7 @@ func TestRun_NotGivenWhenThenMarkdown(t *testing.T) {
 		}
 		last = at
 	}
-	for _, id := range []string{"FORM-1-1", "FORM-1-INV-1", "FORM-2-1"} {
+	for _, id := range []string{"FORM-1-1", "FORM-1-5", "FORM-1-INV-1", "FORM-2-1", "FORM-3-2"} {
 		if strings.Contains(text, id) {
 			t.Errorf("%s is listed under \"Not Given/When/Then\", want no finding:\n%s", id, stdout)
 		}
@@ -656,6 +753,39 @@ requirements:
       - id: ALPHA-4-1
         title: Four
         description: Given a, when b, then c.
+
+  - id: ALPHA-5
+    title: Alpha Five
+    description: Written active, with a draft AC; counted, and folded draft.
+    status: active
+    acceptance_criteria:
+      - id: ALPHA-5-1
+        title: Five
+        description: Given a, when b, then c.
+      - id: ALPHA-5-2
+        title: Five Draft
+        description: Given a, when b, then c.
+        status: draft
+
+  - id: ALPHA-6
+    title: Alpha Draft
+    description: A draft; not counted.
+    status: draft
+    acceptance_criteria:
+      - id: ALPHA-6-1
+        title: Six
+        description: Given a, when b, then c.
+
+  - id: ALPHA-7
+    title: Alpha Seven
+    description: Written deprecated, with an active AC; counted, and folded active.
+    status: deprecated
+    out_of_scope: Seven
+    acceptance_criteria:
+      - id: ALPHA-7-1
+        title: Seven
+        description: Given a, when b, then c.
+        status: active
 `
 
 const reqsBeta = `feature: BETA
@@ -671,17 +801,51 @@ requirements:
       - id: BETA-1-1
         title: One
         description: Given a, when b, then c.
+
+  - id: BETA-2
+    title: Beta Two
+    description: Active with no items; counted.
+    status: active
+    acceptance_criteria: []
+
+  - id: BETA-3
+    title: Beta Three
+    description: Draft with no items; not counted.
+    status: draft
+
+  - id: BETA-4
+    title: Beta Four
+    description: Written active, with only a deprecated AC; not counted.
+    status: active
+    acceptance_criteria:
+      - id: BETA-4-1
+        title: Four
+        description: Given a, when b, then c.
+        status: deprecated
+
+  - id: BETA-5
+    title: Beta Five
+    description: Superseded with an active AC; not counted.
+    status: superseded
+    acceptance_criteria:
+      - id: BETA-5-1
+        title: Five
+        description: Given a, when b, then c.
+        status: active
 `
 
 type jsonRequirement struct {
 	ID         string   `json:"id"`
 	Feature    string   `json:"feature"`
 	Title      string   `json:"title"`
+	Status     string   `json:"status"`
 	Interface  []string `json:"interface"`
 	OutOfScope []string `json:"outOfScope"`
 }
 
 // SPEC-2-2
+// SPEC-4-4
+// SPEC-4-6
 func TestRun_RequirementsJSON(t *testing.T) {
 	root := t.TempDir()
 	writeFiles(t, root, map[string]string{
@@ -689,18 +853,21 @@ func TestRun_RequirementsJSON(t *testing.T) {
 		".spool/beta.req":  reqsBeta,
 		".spool/alpha.req": reqsAlpha,
 		"alpha/stub.go":    "package alpha\n",
-		"pkg/reqs_test.go": annotatedTest("ALPHA-3-1", "ALPHA-1-1", "ALPHA-4-1", "BETA-1-1"),
+		"pkg/reqs_test.go": annotatedTest("ALPHA-3-1", "ALPHA-1-1", "ALPHA-4-1", "ALPHA-5-1", "ALPHA-7-1", "BETA-1-1"),
 	})
 	_, stdout, _ := run(t, root, "--format", "json")
 
 	byFeature := map[string][]jsonRequirement{
 		"ALPHA": {
-			{"ALPHA-3", "ALPHA", "Alpha Three", []string{"./alpha/stub.go", "alpha"}, []string{"Globs in paths", "Checking the stub"}},
-			{"ALPHA-1", "ALPHA", "Alpha One", []string{"alpha/one.go"}, []string{}},
-			{"ALPHA-4", "ALPHA", "Alpha Four", []string{}, []string{"Only this"}},
+			{"ALPHA-3", "ALPHA", "Alpha Three", "active", []string{"./alpha/stub.go", "alpha"}, []string{"Globs in paths", "Checking the stub"}},
+			{"ALPHA-1", "ALPHA", "Alpha One", "active", []string{"alpha/one.go"}, []string{}},
+			{"ALPHA-4", "ALPHA", "Alpha Four", "active", []string{}, []string{"Only this"}},
+			{"ALPHA-5", "ALPHA", "Alpha Five", "draft", []string{}, []string{}},
+			{"ALPHA-7", "ALPHA", "Alpha Seven", "active", []string{}, []string{"Seven"}},
 		},
 		"BETA": {
-			{"BETA-1", "BETA", "Beta One", []string{}, []string{}},
+			{"BETA-1", "BETA", "Beta One", "active", []string{}, []string{}},
+			{"BETA-2", "BETA", "Beta Two", "active", []string{}, []string{}},
 		},
 	}
 	var report struct {
@@ -718,7 +885,7 @@ func TestRun_RequirementsJSON(t *testing.T) {
 	}
 
 	var got []jsonRequirement
-	for _, raw := range jsonList(t, stdout, "requirements", []string{"feature", "id", "interface", "outOfScope", "title"}) {
+	for _, raw := range jsonList(t, stdout, "requirements", []string{"feature", "id", "interface", "outOfScope", "status", "title"}) {
 		var fields map[string]json.RawMessage
 		if err := json.Unmarshal(raw, &fields); err != nil {
 			t.Fatal(err)
@@ -779,9 +946,9 @@ func TestRun_JSONOtherKeysUnchanged(t *testing.T) {
 }
 
 // invReq is the project of the lint invariant. When dirty, its interface
-// paths are missing and two of its ACs aren't Given/When/Then; otherwise
-// they are present and formed. INV-1-2 and INV-1-INV-2 are untested either
-// way.
+// paths are missing and three of its ACs, one of them draft, aren't
+// Given/When/Then; otherwise they are present and formed. INV-1-2 and
+// INV-1-INV-2 are untested either way.
 const invReq = `feature: INV
 
 requirements:
@@ -812,28 +979,29 @@ requirements:
     title: Draft
     description: A draft.
     status: draft
-    interface: stub/never.go
+    interface: stub/draft.go
     acceptance_criteria:
       - id: INV-2-1
         title: Draft AC
-        description: Not checked.
+        description: THIRD
 `
 
 func invProject(t *testing.T, dirty bool) string {
 	t.Helper()
 	root := t.TempDir()
-	first, second := "Given a, when b, then c.", "Given a, when b, then d."
+	first, second, third := "Given a, when b, then c.", "Given a, when b, then d.", "Given a, when b, then e."
 	files := map[string]string{
 		".spool.yaml":     lintConfig("", ""),
 		"pkg/inv_test.go": annotatedTest("INV-1-1", "INV-1-INV-1", "INV-9-9"),
 	}
 	if dirty {
-		first, second = "Spool reports it.", "Given a, then d."
+		first, second, third = "Spool reports it.", "Given a, then d.", "Not checked."
 	} else {
 		files["stub/a.go"] = "package stub\n"
 		files["stub/dir/keep.txt"] = "\n"
+		files["stub/draft.go"] = "package stub\n"
 	}
-	files[".spool/inv.req"] = strings.NewReplacer("FIRST", first, "SECOND", second).Replace(invReq)
+	files[".spool/inv.req"] = strings.NewReplacer("FIRST", first, "SECOND", second, "THIRD", third).Replace(invReq)
 	writeFiles(t, root, files)
 	return root
 }
@@ -844,11 +1012,11 @@ func TestRun_LintLeavesCoverageAlone(t *testing.T) {
 
 	_, dirtyJSON, _ := run(t, dirty, "--format", "json")
 	_, cleanJSON, _ := run(t, clean, "--format", "json")
-	if list := jsonList(t, dirtyJSON, "missingInterfaces", []string{"id", "path"}); len(list) != 2 {
-		t.Fatalf("fixture: dirty missingInterfaces = %s, want 2 findings", list)
+	if list := jsonList(t, dirtyJSON, "missingInterfaces", []string{"id", "path"}); len(list) != 3 {
+		t.Fatalf("fixture: dirty missingInterfaces = %s, want 3 findings", list)
 	}
-	if list := jsonList(t, dirtyJSON, "notGivenWhenThen", []string{"feature", "id"}); len(list) != 2 {
-		t.Fatalf("fixture: dirty notGivenWhenThen = %s, want 2 findings", list)
+	if list := jsonList(t, dirtyJSON, "notGivenWhenThen", []string{"feature", "id"}); len(list) != 3 {
+		t.Fatalf("fixture: dirty notGivenWhenThen = %s, want 3 findings", list)
 	}
 
 	type counts struct {
