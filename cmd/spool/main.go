@@ -29,5 +29,9 @@ func main() {
 		return
 	}
 
+	if len(os.Args) > 1 && os.Args[1] == "hash" {
+		os.Exit(cli.Hash(os.Args[2:], root, os.Stdout, os.Stderr))
+	}
+
 	os.Exit(cli.Run(os.Args[1:], root, os.Stdout, os.Stderr))
 }

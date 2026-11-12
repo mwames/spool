@@ -354,6 +354,9 @@ requirements:
 
   - id: SPEC-5
     title: Spec Hash
+    interface:
+      - internal/reporter/hash.go
+      - internal/cli/hash.go
     description: >
       `spool hash <ID>,<ID>,...` prints a hash of the listed ACs and
       invariants as the agents see them, so a tool can tell whether the
