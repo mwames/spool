@@ -351,3 +351,105 @@ requirements:
           In a project where no AC or invariant has a status of its own, an
           item is active exactly when its requirement's status is active,
           and every requirement's status is the one written.
+
+  - id: SPEC-5
+    title: Spec Hash
+    interface:
+      - internal/reporter/hash.go
+      - internal/cli/hash.go
+    description: >
+      `spool hash <ID>,<ID>,...` prints a hash of the listed ACs and
+      invariants as the agents see them, so a tool can tell whether the
+      spec changed after the tests for those items were locked.
+    status: active
+    deciders:
+      - Matt Ames
+    consulted: []
+    date: 2026-11-11
+    rationale: >
+      The slice verifier must fail when a slice's spec changes after its
+      tests were locked, or tests written for one spec pass against
+      another. The hash covers what the test agent works from: each
+      item's ID, title and description, and its requirement's ID, title,
+      description, interface and out_of_scope. Rationale, deciders, dates
+      and status are left out: approving or deprecating an item says
+      whether it counts, not what it requires, and coverage checks react
+      to that already. Whitespace inside a field is collapsed so that
+      reflowing a paragraph doesn't break a lock. The canonical form is
+      written out in full because hashes are stored and compared across
+      Spool versions; changing it would break every lock, so it is
+      changed only by a new requirement. Each field is length-prefixed so
+      no two different specs share a canonical form.
+    superseded_by:
+    out_of_scope:
+      - Expanding a requirement ID to its ACs and invariants
+      - Hashing tests, and recording the hash (slice's lock step)
+      - Reading the IDs from a file or from stdin
+      - A JSON format, or the hash in spool --ids output
+    acceptance_criteria:
+
+      - id: SPEC-5-1
+        title: Hash Printed
+        description: >
+          Given spool hash with a comma-separated list of AC and invariant
+          IDs that .req files define,
+          when it runs,
+          then stdout holds the hash as 64 lowercase hexadecimal digits
+          and a newline, and nothing else, and it exits 0, whatever the
+          coverage of those items and whatever the configured severities.
+
+      - id: SPEC-5-2
+        title: Canonical Form
+        description: >
+          Given listed IDs,
+          when the hash is computed,
+          then it is the SHA-256 of the canonical form: one record per
+          distinct listed item, ordered by normalized ID in byte order.
+          A record is these fields, in order: the item's ID, title and
+          description; its requirement's ID, title and description; the
+          number of interface paths, then each path as written; the number
+          of out_of_scope items, then each item as written. IDs are
+          normalized; every other text has each run of whitespace
+          replaced by one space and leading and trailing whitespace
+          removed, where whitespace is any character with the Unicode
+          White_Space property; numbers are in decimal. Each field is written as its
+          length in bytes in decimal, a colon, the field's UTF-8 bytes,
+          and a newline.
+
+      - id: SPEC-5-3
+        title: Covered Fields Change the Hash
+        description: >
+          Given listed IDs and their hash,
+          when any field of SPEC-5-2 changes other than in whitespace,
+          including adding or removing an interface path or out_of_scope
+          item, or the list gains or loses an item,
+          then the hash changes.
+
+      - id: SPEC-5-4
+        title: Unknown IDs
+        description: >
+          Given spool hash with a well-formed AC or invariant ID that no
+          .req file defines,
+          when it runs,
+          then stderr names each such ID, stdout is empty, and it exits 1.
+
+      - id: SPEC-5-5
+        title: Bad Arguments
+        description: >
+          Given spool hash with no ID list, more than one argument, an
+          empty list, an empty item, a malformed ID, or a requirement ID,
+          when it runs,
+          then it prints a message to stderr naming the bad item as it
+          was given (any message will do for a missing or empty list or
+          item), prints nothing to stdout, and exits 2.
+
+    invariants:
+
+      - id: SPEC-5-INV-1
+        title: Hash Ignores What It Doesn't Cover
+        description: >
+          Reordering, repeating, or changing the case or leading zeros of
+          the listed IDs; changing whitespace inside a field; changing
+          status, rationale, deciders, consulted, date or superseded_by;
+          editing other items or requirements; and moving a requirement
+          to another .req file of its feature never change the hash.
