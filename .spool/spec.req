@@ -59,9 +59,10 @@ requirements:
           a "Missing Interfaces" heading as `<ID>: <path>`, the markdown
           report under a heading of the same name, and the JSON report as
           "missingInterfaces", a list of {"id", "path"} that is [] when
-          there are none. Findings are ordered as the report's requirements
-          (SPEC-2-2), then as the paths are written. With no findings, the
-          text and markdown reports have no such heading. Paths that exist,
+          there are none. Findings are ordered as the report's features, then
+          as the requirements are in the .req file, then as the paths are
+          written. With no findings, the text and markdown reports have no
+          such heading. Paths that exist,
           and deprecated or superseded requirements, give no finding.
 
       - id: SPEC-1-4
@@ -189,9 +190,10 @@ requirements:
           heading as `<ID>: <title>`, the markdown report under a heading
           of the same name, and the JSON report as "notGivenWhenThen", a
           list of {"id", "feature"} that is [] when there are none.
-          Findings are ordered as the report's requirements (SPEC-2-2), then
-          as the ACs are written. With no findings, the text and markdown
-          reports have no such heading. Deprecated ACs, ACs of superseded
+          Findings are ordered as the report's features, then as the
+          requirements are in the .req file, then as the ACs are written.
+          With no findings, the text and markdown reports have no such
+          heading. Deprecated ACs, ACs of superseded
           requirements, and invariants give no finding.
 
       - id: SPEC-3-3
