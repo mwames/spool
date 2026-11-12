@@ -411,7 +411,8 @@ requirements:
           of out_of_scope items, then each item as written. IDs are
           normalized; every other text has each run of whitespace
           replaced by one space and leading and trailing whitespace
-          removed; numbers are in decimal. Each field is written as its
+          removed, where whitespace is any character with the Unicode
+          White_Space property; numbers are in decimal. Each field is written as its
           length in bytes in decimal, a colon, the field's UTF-8 bytes,
           and a newline.
 
