@@ -55,10 +55,13 @@ func buildDiagnostics(idx *index.Index) map[protocol.DocumentURI][]protocol.Diag
 
 	for _, feat := range idx.Features() {
 		for _, req := range feat.Requirements {
-			if req.Status != "active" {
+			if req.Status == "deprecated" || req.Status == "superseded" {
 				continue
 			}
 			for _, ac := range req.ACs {
+				if ac.Status != "active" && ac.Status != "draft" {
+					continue
+				}
 				if lint.GivenWhenThen(ac.Description) {
 					continue
 				}

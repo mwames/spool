@@ -28,6 +28,7 @@ requirements:
 `
 
 // INVARIANT-1-2: Invariants Parsed
+// SPEC-4-1
 func TestParseFile_Invariants(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "slice.req")
@@ -53,8 +54,8 @@ func TestParseFile_Invariants(t *testing.T) {
 	}
 
 	want := []Invariant{
-		{ID: "SLICE-6-INV-1", Title: "No Lost Jobs", Description: "A job is never dropped.", Line: 14},
-		{ID: "SLICE-6-INV-2", Title: "Ordered", Description: "Jobs finish in order.", Line: 17},
+		{ID: "SLICE-6-INV-1", Title: "No Lost Jobs", Description: "A job is never dropped.", Status: "active", Line: 14},
+		{ID: "SLICE-6-INV-2", Title: "Ordered", Description: "Jobs finish in order.", Status: "active", Line: 17},
 	}
 	for i, w := range want {
 		if r.Invariants[i] != w {

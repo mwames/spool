@@ -33,6 +33,7 @@ type TraceabilityRequirement struct {
 type TraceabilityAC struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
+	Status    string `json:"status"` // as in SPEC-4-1 (SPEC-4-7)
 	File      string `json:"file"`
 	Line      int    `json:"line"`
 	TestCount int    `json:"testCount"`
@@ -42,6 +43,7 @@ type TraceabilityAC struct {
 type TraceabilityInvariant struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
+	Status    string `json:"status"` // as in SPEC-4-1 (SPEC-4-7)
 	File      string `json:"file"`
 	Line      int    `json:"line"`
 	TestCount int    `json:"testCount"`
@@ -72,6 +74,7 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 			for _, ac := range r.ACs {
 				tr.ACs = append(tr.ACs, TraceabilityAC{
 					ID:        ac.ID,
+					Status:    ac.Status,
 					Title:     ac.Title,
 					File:      ac.SourceFile,
 					Line:      ac.Line,
@@ -81,6 +84,7 @@ func buildTraceabilityTree(idx *index.Index) TraceabilityTree {
 			for _, iv := range r.Invariants {
 				tr.Invariants = append(tr.Invariants, TraceabilityInvariant{
 					ID:        iv.ID,
+					Status:    iv.Status,
 					Title:     iv.Title,
 					File:      iv.SourceFile,
 					Line:      iv.Line,

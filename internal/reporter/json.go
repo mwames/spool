@@ -33,6 +33,7 @@ type jsonRequirement struct {
 	ID         string   `json:"id"`
 	Feature    string   `json:"feature"`
 	Title      string   `json:"title"`
+	Status     string   `json:"status"`
 	Interface  []string `json:"interface"`
 	OutOfScope []string `json:"outOfScope"`
 }
@@ -95,7 +96,7 @@ func (JSON) Format(r *spool.Report) ([]byte, error) {
 	}
 
 	for _, q := range r.Requirements {
-		jq := jsonRequirement{ID: q.ID, Feature: q.Feature, Title: q.Title, Interface: q.Interface, OutOfScope: q.OutOfScope}
+		jq := jsonRequirement{ID: q.ID, Feature: q.Feature, Title: q.Title, Status: q.Status, Interface: q.Interface, OutOfScope: q.OutOfScope}
 		if jq.Interface == nil {
 			jq.Interface = []string{}
 		}

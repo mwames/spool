@@ -18,7 +18,14 @@ func inv(id, desc string) parser.Invariant {
 	return parser.Invariant{ID: id, Title: id, Description: desc}
 }
 
+// withInvariants returns r with the given invariants, as parsed: one with no
+// status of its own takes the requirement's (SPEC-4-1).
 func withInvariants(r parser.Requirement, invs ...parser.Invariant) parser.Requirement {
+	for i := range invs {
+		if invs[i].Status == "" {
+			invs[i].Status = r.Status
+		}
+	}
 	r.Invariants = invs
 	return r
 }
